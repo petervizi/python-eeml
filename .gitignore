@@ -1,4 +1,5 @@
 *~
 *.pyc
 build
+docs
 Python_EEML.egg-info
