@@ -1,5 +1,6 @@
 from datetime import date
 from xml.dom.minidom import *
+from datastream import *
 
 __authors__ = "Peter Vizi"
 __license__ = "GPLv3"
@@ -47,6 +48,8 @@ class EEML:
     def addEnvironment(self, env):
         """
         Add a new Environment
+
+        :raise Exception: if `env` is not an `Environment`
         
         :param env: add an `Environment` to this EEML document
         :type env: `Environment`
@@ -65,6 +68,8 @@ class Environment:
                  icon=None, website=None, email=None, updated=None, creator=None, id=None):
         """
         Create a new `Environment`.
+
+        :raise Exception: if sg is wrong
 
         :param title: the title
         :type title: `str`
@@ -89,8 +94,9 @@ class Environment:
         """
         self._title = title
         self._feed = feed
-        if status not in ['frozen', 'live']:
-            raise Exception()
+        if status:
+            if status not in ['frozen', 'live']:
+                raise Exception()
         self._status = status
         self._description = description
         self._icon = icon
@@ -109,6 +115,8 @@ class Environment:
         """
         Set the location of this `Environment`.
 
+        :raise Exception: if `location` is not `Location` type
+
         :param location: the `Location`
         :type location: `Location`
         """
@@ -120,6 +128,8 @@ class Environment:
     def addData(self, data):
         """
         Add some data to this `Environment`.
+
+        :raise Exception: if `data` is not a `list` or a `Data`
 
         :param data: the data to be added
         :type data: `list`, `Data`
@@ -190,6 +200,8 @@ class Location:
     def __init__(self, name=None, lat=None, lon=None, ele=None,
                  exposure=None, domain=None, disposition=None):
         """
+        :raise Exception: if sg is wrong
+
         :param name: a descriptive name
         :type name: `str`
         :param lat: latitude
@@ -211,23 +223,17 @@ class Location:
         self._lon = lon
         self._ele = ele
         if exposure:
-            if exposure in ['indoor', 'outdoor']:
-                self._exposure = exposure
-            else:
+            if exposure not in ['indoor', 'outdoor']:
                 raise Exception()
+        self._exposure = exposure
         if domain:
-            if domain in ['physical', 'virtual']:
-                self._domain = domain
-            else:
+            if domain not in ['physical', 'virtual']:
                 raise Exception()
-        else:
-            raise Exception()
+        self._domain = domain
         if disposition:
-            if disposition in ['fixed', 'mobile']:
-                self._disposition = disposition
-            else:
+            if disposition not in ['fixed', 'mobile']:
                 raise Exception()
-
+        self._disposition = disposition
     def toeeml(self):
         """
         Convert this class into a EEML DOM element.
@@ -329,6 +335,8 @@ class Unit:
 
     def __init__(self, name, type=None, symbol=None):
         """
+        :raise Exception: is sg is wrong
+
         :param name: the name of this unit (eg. meter, Celsius)
         :type name: `str`
         :param type: the type of this unit (``basicSI``, ``derivedSI``, ``conversionBasedUnits``, ``derivedUnits``, ``contextDependentUnits``)
@@ -364,6 +372,14 @@ class Unit:
         unit.appendChild(doc.createTextNode(self._name))
         return unit
 
+class Celsius(Unit):
+    def __init__(self):
+        Unit.__init__(self, 'Celsius', 'derivedSI', 'C')
+
+class RH(Unit):
+    def __init__(self):
+        Unit.__init__(self, 'Relative Humidity', 'derivedUnits', '%RH')
+
 def create_eeml(env, loc, data):
     """
     Create an `EEML` document from the parameters.
@@ -376,7 +392,8 @@ def create_eeml(env, loc, data):
     :type data: `list`, `Data`
     """
     eeml = EEML()
-    env.setLocation(loc)
+    if loc:
+        env.setLocation(loc)
     eeml.addEnvironment(env)
     env.addData(data)
     return eeml
