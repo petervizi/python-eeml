@@ -7,7 +7,7 @@ __license__ = "GPLv3"
 __version__ = "0.1"
 __docformat__ = "restructuredtext en"
 __doc__ = """
-This package provides support for handling eeml_ files in python.
+This package provides support for handling eeml files in python.
 
 Reference
 =========
@@ -15,51 +15,7 @@ Reference
 Almasretes.
 """
 
-class EEML:
-    """
-    A class representing an EEML document.
-    """
-
-    def __init__(self):
-        """
-        Create a new EEML document.
-        """
-        self._environments = [] #: the environments in this EEML document
-
-    def toeeml(self):
-        """
-        Convert this document into an EEML file.
-
-        :return: the EEML document
-        :rtype: `Document`
-        """
-        doc = Document()
-        eeml = doc.createElement('eeml')
-        eeml.setAttribute('xmlns', 'http://www.eeml.org/xsd/005')
-        eeml.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
-        eeml.setAttribute('xsi:schemaLocation', 'http://www.eeml.org/xsd/005 http://www.eeml.org/xsd/005/005.xsd')
-        eeml.setAttribute('version', '5')
-        doc.appendChild(eeml)
-        for env in self._environments:
-            tmp = env.toeeml()
-            eeml.appendChild(tmp)
-        return doc
-
-    def addEnvironment(self, env):
-        """
-        Add a new Environment
-
-        :raise Exception: if `env` is not an `Environment`
-        
-        :param env: add an `Environment` to this EEML document
-        :type env: `Environment`
-        """
-        if isinstance(env, Environment):
-            self._environments.append(env)
-        else:
-            raise Exception()
-
-class Environment:
+class Environment(object):
     """
     The Environment element of the document.
     """
@@ -109,7 +65,7 @@ class Environment:
                 raise Exception()
         self._id = id
         self._location = None
-        self._data = []
+        self._data = {}
 
     def setLocation(self, location):
         """
@@ -125,21 +81,28 @@ class Environment:
         else:
             raise Exception
 
-    def addData(self, data):
-        """
-        Add some data to this `Environment`.
+#     def addData(self, data):
+#         """
+#         Add some data to this `Environment`.
 
-        :raise Exception: if `data` is not a `list` or a `Data`
+#         :raise Exception: if `data` is not a `list` or a `Data`
 
-        :param data: the data to be added
-        :type data: `list`, `Data`
-        """
+#         :param data: the data to be added
+#         :type data: `list`, `Data`
+#         """
+#         if isinstance(data, Data):
+#             self._data.append(data)
+#         elif isinstance(data, list):
+#             self._data.extend(data)
+#         else:
+#             raise Exception()
+
+    def updateData(self, data):
         if isinstance(data, Data):
-            self._data.append(data)
+            self._data[data.id] = data
         elif isinstance(data, list):
-            self._data.extend(data)
-        else:
-            raise Exception()
+            for d in data:
+                self._data[d.id] = d
 
     def toeeml(self):
         """
@@ -189,11 +152,65 @@ class Environment:
             env.appendChild(tmp)
         if self._location:            
             env.appendChild(self._location.toeeml())
-        for data in self._data:
+        for data in self._data.itervalues():
             env.appendChild(data.toeeml())
         return env
 
-class Location:
+class EEML(object):
+    """
+    A class representing an EEML document.
+    """
+
+    def __init__(self, environment=Environment()):
+        """
+        Create a new EEML document.
+        """
+        self._environment = environment #: the environments in this EEML document
+
+    def toeeml(self):
+        """
+        Convert this document into an EEML file.
+
+        :return: the EEML document
+        :rtype: `Document`
+        """
+        doc = Document()
+        eeml = doc.createElement('eeml')
+        eeml.setAttribute('xmlns', 'http://www.eeml.org/xsd/005')
+        eeml.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+        eeml.setAttribute('xsi:schemaLocation', 'http://www.eeml.org/xsd/005 http://www.eeml.org/xsd/005/005.xsd')
+        eeml.setAttribute('version', '5')
+        doc.appendChild(eeml)
+        tmp = self._environment.toeeml()
+        eeml.appendChild(tmp)
+        return doc
+
+    def setEnvironment(self, env):
+        """
+        Add a new Environment
+
+        :raise Exception: if `env` is not an `Environment`
+        
+        :param env: add an `Environment` to this EEML document
+        :type env: `Environment`
+        """
+        if isinstance(env, Environment):
+            self._environment = env
+        else:
+            raise Exception()
+
+    def updateData(self, data):
+        """
+        Update a data value.
+
+        :param data: the new data
+        :type data: `Data`, `list`
+        """
+
+        if not self._environment: raise Exception()
+        self._environment.updateData(data)
+
+class Location(object):
     """
     A class representing the location tag of the document.
     """
@@ -269,7 +286,7 @@ class Location:
 
         return loc
 
-class Data:
+class Data(object):
     """
     The Data element of the document
     """
@@ -302,6 +319,11 @@ class Data:
                 raise Exception()
         self._unit = unit
 
+    def getId(self):
+        return self._id
+
+    id = property(getId)
+
     def toeeml(self):
         """
         Convert this element into a DOM object.
@@ -328,7 +350,7 @@ class Data:
             data.appendChild(self._unit.toeeml())
         return data
 
-class Unit:
+class Unit(object):
     """
     This class represents a unit element in the EEML document.
     """
@@ -373,11 +395,25 @@ class Unit:
         return unit
 
 class Celsius(Unit):
+    """
+    Degree Celsius unit class.
+    """
+
     def __init__(self):
+        """
+        Initialize the `Unit` parameters with Celsius.
+        """
         Unit.__init__(self, 'Celsius', 'derivedSI', 'C')
 
 class RH(Unit):
+    """
+    Relative Humidity unit class.
+    """
+
     def __init__(self):
+        """
+        Initialize the `Unit` parameters with Relative Humidity.
+        """
         Unit.__init__(self, 'Relative Humidity', 'derivedUnits', '%RH')
 
 def create_eeml(env, loc, data):
@@ -394,6 +430,6 @@ def create_eeml(env, loc, data):
     eeml = EEML()
     if loc:
         env.setLocation(loc)
-    eeml.addEnvironment(env)
-    env.addData(data)
+    eeml.setEnvironment(env)
+    env.updateData(data)
     return eeml
