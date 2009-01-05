@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from datetime import date
 from xml.dom.minidom import *
 from datastream import *
@@ -9,10 +11,10 @@ __docformat__ = "restructuredtext en"
 __doc__ = """
 This package provides support for handling eeml files in python.
 
-Reference
-=========
+Usage
+=====
 
-Almasretes.
+Look at the test directory.
 """
 
 class Environment(object):
@@ -80,22 +82,6 @@ class Environment(object):
             self._location = location
         else:
             raise Exception
-
-#     def addData(self, data):
-#         """
-#         Add some data to this `Environment`.
-
-#         :raise Exception: if `data` is not a `list` or a `Data`
-
-#         :param data: the data to be added
-#         :type data: `list`, `Data`
-#         """
-#         if isinstance(data, Data):
-#             self._data.append(data)
-#         elif isinstance(data, list):
-#             self._data.extend(data)
-#         else:
-#             raise Exception()
 
     def updateData(self, data):
         if isinstance(data, Data):
@@ -403,7 +389,7 @@ class Celsius(Unit):
         """
         Initialize the `Unit` parameters with Celsius.
         """
-        Unit.__init__(self, 'Celsius', 'derivedSI', 'C')
+        Unit.__init__(self, 'Celsius', 'derivedSI', '°C')
 
 class RH(Unit):
     """
