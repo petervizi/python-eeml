@@ -391,6 +391,17 @@ class Celsius(Unit):
         """
         Unit.__init__(self, 'Celsius', 'derivedSI', '°C')
 
+class Fahrenheit(Unit):
+    """
+    Degree Fahrenheit unit class.
+    """
+
+    def __init__(self):
+        """
+        Initialize the `Unit` parameters with Fahrenheit.
+        """
+        Unit.__init__(self, 'Fahrenheit', 'derivedSI', 'Â°F')
+
 class RH(Unit):
     """
     Relative Humidity unit class.
