@@ -400,7 +400,7 @@ class Fahrenheit(Unit):
         """
         Initialize the `Unit` parameters with Fahrenheit.
         """
-        Unit.__init__(self, 'Fahrenheit', 'derivedSI', 'Â°F')
+        Unit.__init__(self, 'Fahrenheit', 'derivedSI', '°F')
 
 class RH(Unit):
     """
