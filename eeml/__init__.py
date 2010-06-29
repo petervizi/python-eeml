@@ -413,6 +413,17 @@ class RH(Unit):
         """
         Unit.__init__(self, 'Relative Humidity', 'derivedUnits', '%RH')
 
+class Watt(Unit):
+    """
+    Watt unit class.
+    """
+
+    def __init__(self):
+        """
+        Initialize the `Unit` parameters with Watt.
+        """
+        Unit.__init__(self, 'Watt', 'derivedSI', 'W')
+
 def create_eeml(env, loc, data):
     """
     Create an `EEML` document from the parameters.
