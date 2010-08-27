@@ -9,6 +9,11 @@ Intorduction
 
 This is a python package for generating eeml_ documents.
 
+Installation
+============
+
+Run: `sudo python setup.py install`.
+
 Example
 =======
 

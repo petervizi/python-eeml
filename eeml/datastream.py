@@ -1,5 +1,6 @@
 import eeml
 import httplib
+import re
 
 __authors__ = "Peter Vizi"
 __license__ = "GPLv3"
@@ -9,6 +10,8 @@ __doc__ = """
 The way to handle data streams, and put it to the pachube server.
 """
 
+url_pattern = re.compile("/api/\d+\.xml")
+
 class Pachube(object):
     """
     A class for manually updating a pachube data stream.
@@ -16,13 +19,24 @@ class Pachube(object):
 
     def __init__(self, url, key):
         """
-        :param url: the api url (eg. '/api/1275.xml')
+        :param url: the api url either '/api/1275.xml' or 1275
         :type url: `str`
         :param key: your personal api key
         :type key: `str`
         """
-
-        self._url = url
+        if str(url) == url:
+            if(url_pattern.match(url)):
+                self._url = url
+            else:
+                raise ValueError("The url argument has to be in the form '/api/1275.xml' or 1275")
+        else:
+            try:
+                if int(url) == url:
+                    self._url = '/api/' + str(url) + '.xml'
+                else:
+                    raise TypeError('')
+            except TypeError:
+                raise TypeError("The url argument has to be in the form '/api/1275.xml' or 1275")
         self._key = key
         self._eeml = eeml.create_eeml(eeml.Environment(), None, [])
 
