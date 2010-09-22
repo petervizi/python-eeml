@@ -326,9 +326,9 @@ class Data(object):
             tmp.appendChild(doc.createTextNode(tag))
             data.appendChild(tmp)
         tmp = doc.createElement('value')
-        if self._minValue:
+        if self._minValue is not None:
             tmp.setAttribute('minValue', str(self._minValue))
-        if self._minValue:
+        if self._maxValue is not None:
             tmp.setAttribute('maxValue', str(self._maxValue))
         tmp.appendChild(doc.createTextNode(str(self._value)))
         data.appendChild(tmp)
