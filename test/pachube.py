@@ -3,7 +3,7 @@ from eeml import *
 import httplib
 import random
 
-url = '/api/1275.xml'
+url = '/v2/feeds/1275.xml'
 key = 'PACHUBE_API_KEY'
 
 pa = Pachube(url, key)

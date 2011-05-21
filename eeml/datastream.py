@@ -10,7 +10,7 @@ __doc__ = """
 The way to handle data streams, and put it to the pachube server.
 """
 
-url_pattern = re.compile("/api/\d+\.xml")
+url_pattern = re.compile("/v[12]/feeds/\d+\.xml")
 
 class Pachube(object):
     """
@@ -19,7 +19,7 @@ class Pachube(object):
 
     def __init__(self, url, key):
         """
-        :param url: the api url either '/api/1275.xml' or 1275
+        :param url: the api url either '/v2/feeds/1275.xml' or 1275
         :type url: `str`
         :param key: your personal api key
         :type key: `str`
@@ -28,15 +28,15 @@ class Pachube(object):
             if(url_pattern.match(url)):
                 self._url = url
             else:
-                raise ValueError("The url argument has to be in the form '/api/1275.xml' or 1275")
+                raise ValueError("The url argument has to be in the form '/v2/feeds/1275.xml' or 1275")
         else:
             try:
                 if int(url) == url:
-                    self._url = '/api/' + str(url) + '.xml'
+                    self._url = '/v2/feeds/' + str(url) + '.xml'
                 else:
                     raise TypeError('')
             except TypeError:
-                raise TypeError("The url argument has to be in the form '/api/1275.xml' or 1275")
+                raise TypeError("The url argument has to be in the form '/v2/feeds/1275.xml' or 1275")
         self._key = key
         self._eeml = eeml.create_eeml(eeml.Environment(), None, [])
 
@@ -55,7 +55,7 @@ class Pachube(object):
 
         :raise Exception: if there was problem with the communication
         """
-        conn = httplib.HTTPConnection('www.pachube.com:80')
+        conn = httplib.HTTPConnection('api.pachube.com:80')
         conn.request('PUT', self._url, self._eeml.toeeml().toxml(), {'X-PachubeApiKey': self._key})
         resp = conn.getresponse()
         if resp.status != 200:
