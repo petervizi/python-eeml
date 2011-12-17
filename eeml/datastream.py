@@ -17,7 +17,9 @@ class Pachube(object):
     A class for manually updating a pachube data stream.
     """
 
-    def __init__(self, url, key):
+    host = 'api.pachube.com'
+
+    def __init__(self, url, key, use_https=True):
         """
         :param url: the api url either '/v2/feeds/1275.xml' or 1275
         :type url: `str`
@@ -38,6 +40,7 @@ class Pachube(object):
             except TypeError:
                 raise TypeError("The url argument has to be in the form '/v2/feeds/1275.xml' or 1275")
         self._key = key
+        self._use_https = use_https
         self._eeml = eeml.create_eeml(eeml.Environment(), None, [])
 
     def update(self, data):
@@ -55,7 +58,8 @@ class Pachube(object):
 
         :raise Exception: if there was problem with the communication
         """
-        conn = httplib.HTTPConnection('api.pachube.com:80')
+        conn = httplib.HTTPSConnection(self.host) if self._use_https else \
+                httplib.HTTPConnection(self.host)
         conn.request('PUT', self._url, self._eeml.toeeml().toxml(), {'X-PachubeApiKey': self._key})
         resp = conn.getresponse()
         if resp.status != 200:

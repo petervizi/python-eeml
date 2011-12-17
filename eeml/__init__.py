@@ -23,7 +23,7 @@ class Environment(object):
     """
 
     def __init__(self, title=None, feed=None, status=None, description=None,
-                 icon=None, website=None, email=None, updated=None, creator=None, id=None):
+                 icon=None, website=None, email=None, updated=None, creator=None, id=None, private=None):
         """
         Create a new `Environment`.
 
@@ -68,6 +68,7 @@ class Environment(object):
         self._id = id
         self._location = None
         self._data = {}
+        self._private = private
 
     def setLocation(self, location):
         """
@@ -135,6 +136,10 @@ class Environment(object):
         if self._email:
             tmp = doc.createElement('email')
             tmp.appendChild(doc.createTextNode(self._email))
+            env.appendChild(tmp)
+        if self._private is not None:
+            tmp = doc.createElement('private')
+            tmp.appendChild(doc.createTextNode(str(self._private).lower()))
             env.appendChild(tmp)
         if self._location:            
             env.appendChild(self._location.toeeml())
