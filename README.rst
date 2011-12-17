@@ -12,7 +12,12 @@ This is a python package for generating eeml_ documents.
 Installation
 ============
 
-Run: `sudo python setup.py install`.
+With administrative privileges run:
+`sudo python setup.py install`
+
+Without root access:
+`python setup.py install --prefix=~/`
+`PTYHONPATH="~/lib/python2.7/site-packages" python example/simple_example.py`
 
 Example
 =======

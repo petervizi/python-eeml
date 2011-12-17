@@ -5,11 +5,13 @@ import datetime
 a = datetime.tzinfo()
 
 # parameters
-API_KEY = 'f2a9bd5a63e6a397629ede7e44c80f6a0941ddecf9a986fed40aae95dab5392d'
-API_URL = '/api/1275.xml'
-#API_URL = 
+API_KEY = 'YOUR_API_KEY'
+# API_URL = '/v2/feeds/42166.xml'
+API_URL = 42166
 
 readings = [3, 4]
 pac = eeml.Pachube(API_URL, API_KEY)
-pac.update([eeml.Data(0, readings[0], unit=eeml.Celsius()), eeml.Data(1, readings[1], unit=eeml.RH())])
+pac.update([
+        eeml.Data("Temperature", readings[0], unit=eeml.Celsius()), 
+        eeml.Data("Humidity", readings[1], unit=eeml.RH())])
 pac.put()
