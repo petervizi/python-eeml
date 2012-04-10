@@ -58,8 +58,10 @@ class Pachube(object):
 
         :raise Exception: if there was problem with the communication
         """
-        conn = httplib.HTTPSConnection(self.host) if self._use_https else \
-                httplib.HTTPConnection(self.host)
+        if self._use_https:
+            conn = httplib.HTTPSConnection(self.host)
+        else:
+            conn = httplib.HTTPConnection(self.host)
         conn.request('PUT', self._url, self._eeml.toeeml().toxml(), {'X-PachubeApiKey': self._key})
         resp = conn.getresponse()
         if resp.status != 200:
