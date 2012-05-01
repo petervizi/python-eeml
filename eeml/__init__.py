@@ -54,7 +54,7 @@ class Environment(object):
         self._feed = feed
         if status:
             if status not in ['frozen', 'live']:
-                raise Exception()
+                raise ValueError("status must be either 'frozen' or 'live', got %s" % status)
         self._status = status
         self._description = description
         self._icon = icon
@@ -64,7 +64,7 @@ class Environment(object):
         self._creator = creator
         if id:
             if int(id) < 0:
-                raise Exception()
+                raise ValueError("id must be a positive integer")
         self._id = id
         self._location = None
         self._data = {}
@@ -82,7 +82,7 @@ class Environment(object):
         if isinstance(location, Location):
             self._location = location
         else:
-            raise Exception
+            raise ValueError("location must be a Location object, got %s" % type(location))
 
     def updateData(self, data):
         if isinstance(data, Data):
@@ -188,7 +188,7 @@ class EEML(object):
         if isinstance(env, Environment):
             self._environment = env
         else:
-            raise Exception()
+            raise ValueError("env must be an Environment object, got %s" % type(env))
 
     def updateData(self, data):
         """
@@ -198,8 +198,10 @@ class EEML(object):
         :type data: `Data`, `list`
         """
 
-        if not self._environment: raise Exception()
+        if not self._environment: 
+            raise Exception("Environment not set, cannot update data.")
         self._environment.updateData(data)
+
 
 class Location(object):
     """
@@ -230,18 +232,22 @@ class Location(object):
         self._lat = lat
         self._lon = lon
         self._ele = ele
+
         if exposure:
             if exposure not in ['indoor', 'outdoor']:
-                raise Exception()
+                raise ValueError("exposure must be 'indoor' or 'outdoor', got '%s'" %exposure)
         self._exposure = exposure
+
         if domain:
             if domain not in ['physical', 'virtual']:
-                raise Exception()
-        self._domain = domain
+                raise ValueError("domain must be 'physical' or 'virtual', got '%s'"%domain)
+        self._domain = domain\
+
         if disposition:
             if disposition not in ['fixed', 'mobile']:
-                raise Exception()
+                raise ValueError("disposition must be 'fixed' or 'mobile', got '%s'"%disposition)
         self._disposition = disposition
+
     def toeeml(self):
         """
         Convert this class into a EEML DOM element.
@@ -307,7 +313,7 @@ class Data(object):
         self._maxValue = maxValue
         if unit:
             if not isinstance(unit, Unit):
-                raise Exception()
+                raise ValueError("unit must be an instance of Unit, got %s" % type(unit))
         self._unit = unit
 
     def getId(self):
@@ -359,11 +365,13 @@ class Unit(object):
         """
 
         self._name = name
+        self.__valid_types = ['basicSI', 'derivedSI', 'conversionBasedUnits', 'derivedUnits', 'contextDependentUnits']
         if type:
-            if type in ['basicSI', 'derivedSI', 'conversionBasedUnits', 'derivedUnits', 'contextDependentUnits']:
+            if type in self.__valid_types:
                 self._type = type
             else:
-                raise Exception()
+                raise ValueError("type must be %s, got '%s'" % (
+                    ", ".join(['%s'%s for s in self.__valid_types]), type))
         self._type = type
         self._symbol = symbol
 
@@ -396,6 +404,7 @@ class Celsius(Unit):
         """
         Unit.__init__(self, 'Celsius', 'derivedSI', '°C')
 
+
 class Fahrenheit(Unit):
     """
     Degree Fahrenheit unit class.
@@ -406,6 +415,7 @@ class Fahrenheit(Unit):
         Initialize the `Unit` parameters with Fahrenheit.
         """
         Unit.__init__(self, 'Fahrenheit', 'derivedSI', '°F')
+
 
 class RH(Unit):
     """
@@ -418,6 +428,7 @@ class RH(Unit):
         """
         Unit.__init__(self, 'Relative Humidity', 'derivedUnits', '%RH')
 
+
 class Watt(Unit):
     """
     Watt unit class.
@@ -428,6 +439,7 @@ class Watt(Unit):
         Initialize the `Unit` parameters with Watt.
         """
         Unit.__init__(self, 'Watt', 'derivedSI', 'W')
+
 
 def create_eeml(env, loc, data):
     """
