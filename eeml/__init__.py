@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from datetime import date
-from xml.dom.minidom import *
+from datetime import date, datetime
+from xml.etree import ElementTree as etree
 from datastream import *
 
 __authors__ = "Peter Vizi"
 __license__ = "GPLv3"
-__version__ = "0.1"
+__version__ = "0.1.005"
 __docformat__ = "restructuredtext en"
 __doc__ = """
 This package provides support for handling eeml files in python.
