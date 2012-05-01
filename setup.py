@@ -1,6 +1,8 @@
 from setuptools import setup
 from setuptools import find_packages
 
+import logging, multiprocessing
+
 setup(
     name="Python EEML", 
     version="0.1.005",
@@ -10,14 +12,11 @@ setup(
     description="Python support for the Extended Environments Markup Language",
     license="GPLv3",
     install_requires = [
-        'lxml',
     ],
-    test_suite = [
-        'nose.collector',
-    ]
-    tests_requires = [
+    test_suite = 'nose.collector',
+    tests_require = [
         'nose',
-        'strainer',
+        'formencode',
     ],
     zip_safe = False,
     include_package_data = True,
