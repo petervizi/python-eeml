@@ -1,6 +1,7 @@
 import eeml
 import httplib
 import re
+from lxml import etree
 
 __authors__ = "Peter Vizi"
 __license__ = "GPLv3"
@@ -19,13 +20,15 @@ class Pachube(object):
 
     host = 'api.pachube.com'
 
-    def __init__(self, url, key, use_https=True):
+    def __init__(self, url, key, env=None, loc=None, dat=[], use_https=True):
         """
         :param url: the api url either '/v2/feeds/1275.xml' or 1275
         :type url: `str`
         :param key: your personal api key
         :type key: `str`
         """
+        if not env:
+            env = eeml.Environment()
         if str(url) == url:
             if(url_pattern.match(url)):
                 self._url = url
@@ -41,7 +44,7 @@ class Pachube(object):
                 raise TypeError("The url argument has to be in the form '/v2/feeds/1275.xml' or 1275")
         self._key = key
         self._use_https = use_https
-        self._eeml = eeml.create_eeml(eeml.Environment(), None, [])
+        self._eeml = eeml.create_eeml(env, loc, dat)
 
     def update(self, data):
         """
@@ -62,9 +65,15 @@ class Pachube(object):
             conn = httplib.HTTPSConnection(self.host)
         else:
             conn = httplib.HTTPConnection(self.host)
-        conn.request('PUT', self._url, self._eeml.toeeml().toxml(), {'X-PachubeApiKey': self._key})
+
+        conn.request('PUT', self._url, etree.tostring(self._eeml.toeeml(), encoding='UTF-8'), {'X-PachubeApiKey': self._key})
         resp = conn.getresponse()
         if resp.status != 200:
-            raise Exception(resp.reason)
+            try:
+                errors = etree.fromstring(resp.read())
+                msg = "%s: %s" % (errors[0].text, errors[1].text)
+            except:
+                msg = resp.reason
+            raise Exception(msg)
         resp.read()
         conn.close()

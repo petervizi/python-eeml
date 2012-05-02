@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import date, datetime
-from xml.etree import ElementTree as etree
+from lxml import etree
 from datastream import *
 
 __authors__ = "Peter Vizi"
@@ -16,6 +16,14 @@ Usage
 
 Look at the test directory.
 """
+
+EEML_NAMESPACE = 'http://www.eeml.org/xsd/0.5.1'
+XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+NSMAP = {None: EEML_NAMESPACE,
+         'xsi': XSI_NAMESPACE}
+
+def _elem(name):
+    return etree.Element("{%s}%s" % (EEML_NAMESPACE, name), nsmap=NSMAP)
 
 class Environment(object):
     """
@@ -98,7 +106,7 @@ class Environment(object):
         :return: the top element of this `Environment`
         :rtype: `Element`
         """
-        env = etree.Element('environment')
+        env = _elem('environment')
         if self._updated:
             if isinstance(self._updated, (date, datetime,)):
                 env.attrib['updated'] =  self._updated.isoformat()
@@ -109,35 +117,35 @@ class Environment(object):
         if self._id:
             env.attrib['id'] = str(self._id)
         if self._title:
-            tmp = etree.Element('title')
+            tmp = _elem('title')
             tmp.text = self._title
             env.append(tmp)
         if self._feed:
-            tmp = etree.Element('feed')
+            tmp = _elem('feed')
             tmptext = self._feed
             env.append(tmp)
         if self._status:
-            tmp = etree.Element('status')
+            tmp = _elem('status')
             tmp.text = self._status
             env.append(tmp)
         if self._description:
-            tmp = etree.Element('description')
+            tmp = _elem('description')
             tmp.text = self._description
             env.append(tmp)
         if self._icon:
-            tmp = etree.Element('icon')
+            tmp = _elem('icon')
             tmp.text = self._icon
             env.append(tmp)
         if self._website:
-            tmp = etree.Element('website')
+            tmp = _elem('website')
             tmp.text = self._website
             env.append(tmp)
         if self._email:
-            tmp = etree.Element('email')
+            tmp = _elem('email')
             tmp.text = self._email
             env.append(tmp)
         if self._private is not None:
-            tmp = etree.Element('private')
+            tmp = _elem('private')
             tmp.text = str(self._private).lower()
             env.append(tmp)
         if self._location:            
@@ -165,10 +173,10 @@ class EEML(object):
         :return: the EEML document
         :rtype: `Document`
         """
-        eeml = etree.Element('eeml')
-        eeml.attrib['xmlns:xsi'] = "http://www.w3.org/2001/XMLSchema-instance"
-        eeml.attrib['xsi:schemaLocation'] = 'http://www.eeml.org/xsd/005 http://www.eeml.org/xsd/005/005.xsd'
-        eeml.attrib['version'] = '5'
+        eeml = _elem('eeml')
+
+        eeml.attrib['{%s}schemaLocation' % XSI_NAMESPACE] = 'http://www.eeml.org/xsd/0.5.1 http://www.eeml.org/xsd/0.5.1/0.5.1.xsd'
+        eeml.attrib['version'] = '0.5.1'
 
         eeml.append(self._environment.toeeml())
 
@@ -254,7 +262,7 @@ class Location(object):
         :rtype: `Element`
         """
 
-        loc = etree.Element('location')
+        loc = _elem('location')
         if self._exposure:
             loc.attrib['exposure'] =  self._exposure
         if self._domain:
@@ -262,19 +270,19 @@ class Location(object):
         if self._disposition:
             loc.attrib['disposition'] =  self._disposition
         if self._name:
-            tmp = etree.Element('name')
+            tmp = _elem('name')
             tmp.text = self._name
             loc.append(tmp)
         if self._lat:
-            tmp = etree.Element('lat')
+            tmp = _elem('lat')
             tmp.text = str(self._lat)
             loc.append(tmp)
         if self._lon:
-            tmp = etree.Element('lon')
+            tmp = _elem('lon')
             tmp.text = str(self._lon)
             loc.append(tmp)
         if self._ele:
-            tmp = etree.Element('ele')
+            tmp = _elem('ele')
             tmp.text = str(self._ele)
             loc.append(tmp)
 
@@ -327,14 +335,14 @@ class Data(object):
         :rtype: `Element`
         """
 
-        data = etree.Element('data')
+        data = _elem('data')
         data.attrib['id'] = str(self._id)
         for tag in self._tags:
-            tmp = etree.Element('tag')
+            tmp = _elem('tag')
             tmp.text = tag
             data.append(tmp)
 
-        tmp = etree.Element('value')
+        tmp = _elem('current_value')
         if self._minValue is not None:
             tmp.attrib['minValue']  = str(self._minValue)
         if self._maxValue is not None:
@@ -384,7 +392,7 @@ class Unit(object):
         :rtype: `Element`
         """
 
-        unit = etree.Element('unit')
+        unit = _elem('unit')
         if self._type:
             unit.attrib['type'] =  self._type
         if self._symbol:
@@ -404,7 +412,7 @@ class Celsius(Unit):
         """
         Initialize the `Unit` parameters with Celsius.
         """
-        Unit.__init__(self, 'Celsius', 'derivedSI', '°C')
+        Unit.__init__(self, 'Celsius', 'derivedSI', u'\xb0C')
 
 
 class Fahrenheit(Unit):
@@ -416,7 +424,7 @@ class Fahrenheit(Unit):
         """
         Initialize the `Unit` parameters with Fahrenheit.
         """
-        Unit.__init__(self, 'Fahrenheit', 'derivedSI', '°F')
+        Unit.__init__(self, 'Fahrenheit', 'derivedSI', u'\xb0F')
 
 
 class RH(Unit):

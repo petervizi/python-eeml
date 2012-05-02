@@ -15,7 +15,7 @@ class TestEEML(TestCase):
 
         assert_true(xml_compare(etree.fromstring(
             """
-            <location disposition="fixed" domain="physical" exposure="indoor">
+            <location xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" disposition="fixed" domain="physical" exposure="indoor">
             <name>My Room</name>
             <lat>32.4</lat>
             <lon>22.7</lon>
@@ -25,11 +25,11 @@ class TestEEML(TestCase):
 
 
     def test_good_unit(self):
-        unit = Unit("Celcius", 'basicSI', "C")
+        unit = Unit("Celzius", 'basicSI', "C")
 
         assert_true(xml_compare(etree.fromstring(
             """
-            <unit type="basicSI" symbol="C">Celcius</unit>
+            <unit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" type="basicSI" symbol="C">Celzius</unit>
             """.strip()), unit.toeeml()))
 
 
@@ -45,9 +45,9 @@ class TestEEML(TestCase):
 
         assert_true(xml_compare(etree.fromstring(
             """
-            <data id="0">
+            <data xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" id="0">
             <tag>length</tag>
-            <value maxValue="100" minValue="0">10.0</value>
+            <current_value maxValue="100" minValue="0">10.0</current_value>
             <unit symbol="C" type="derivedSI">Celsius</unit>
             </data>
             """.strip()), test_data.toeeml()))
@@ -62,12 +62,12 @@ class TestEEML(TestCase):
             'http://www.roomsomewhere/',
             'myemail@roomsomewhere',
             updated='2007-05-04T18:13:51.0Z',
-            creator='http://www.haque.co.uk',
+            creator='http://www.somewhere',
             id=1)
 
         assert_true(xml_compare(etree.fromstring(
             """
-            <environment creator="http://www.haque.co.uk" id="1" updated="2007-05-04T18:13:51.0Z">
+            <environment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" creator="http://www.somewhere" id="1" updated="2007-05-04T18:13:51.0Z">
                 <title>A Room Somewhere</title>
                 <feed />
                 <status>frozen</status>
@@ -86,7 +86,7 @@ class TestEEML(TestCase):
             'http://www.roomsomewhere/',
             'myemail@roomsomewhere',
             updated='2007-05-04T18:13:51.0Z',
-            creator='http://www.haque.co.uk',
+            creator='http://www.somewhere',
             id=1)
         loc = Location('My Room', 32.4, 22.7, 0.2, 'indoor', 'physical', 'fixed')
         u = Unit('Celsius', 'derivedSI', 'C')
@@ -104,8 +104,8 @@ class TestEEML(TestCase):
 
         assert_true(xml_compare(etree.fromstring(
             """
-            <eeml version="5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.eeml.org/xsd/005 http://www.eeml.org/xsd/005/005.xsd">
-                <environment creator="http://www.haque.co.uk" id="1" updated="2007-05-04T18:13:51.0Z">
+            <eeml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" xsi:schemaLocation="http://www.eeml.org/xsd/0.5.1 http://www.eeml.org/xsd/0.5.1/0.5.1.xsd" version="0.5.1">
+                <environment creator="http://www.somewhere" id="1" updated="2007-05-04T18:13:51.0Z">
                     <title>A Room Somewhere</title>
                     <feed />
                     <status>frozen</status>
@@ -121,21 +121,21 @@ class TestEEML(TestCase):
                     </location>
                     <data id="0">
                         <tag>temperature</tag>
-                        <value maxValue="48.0" minValue="23.8">36.2</value>
+                        <current_value maxValue="48.0" minValue="23.8">36.2</current_value>
                         <unit symbol="C" type="derivedSI">Celsius</unit>
                     </data>
                     <data id="1">
                         <tag>blush</tag>
                         <tag>redness</tag>
                         <tag>embarrasement</tag>
-                        <value maxValue="100" minValue="0">84.2</value>
+                        <current_value maxValue="100" minValue="0">84.2</current_value>
                         <unit type="contextDependentUnits">blushesPerHour</unit>
                     </data>
                     <data id="2">
                         <tag>length</tag>
                         <tag>distance</tag>
                         <tag>extension</tag>
-                        <value minValue="0">12.3</value>
+                        <current_value minValue="0">12.3</current_value>
                         <unit symbol="m" type="basicSI">meter</unit>
                     </data>
                 </environment>
