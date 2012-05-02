@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from datetime import date
-from xml.dom.minidom import *
+from datetime import date, datetime
+from xml.etree import ElementTree as etree
 from datastream import *
 
 __authors__ = "Peter Vizi"
 __license__ = "GPLv3"
-__version__ = "0.1"
+__version__ = "0.1.005"
 __docformat__ = "restructuredtext en"
 __doc__ = """
 This package provides support for handling eeml files in python.
@@ -54,7 +54,7 @@ class Environment(object):
         self._feed = feed
         if status:
             if status not in ['frozen', 'live']:
-                raise Exception()
+                raise ValueError("status must be either 'frozen' or 'live', got %s" % status)
         self._status = status
         self._description = description
         self._icon = icon
@@ -64,7 +64,7 @@ class Environment(object):
         self._creator = creator
         if id:
             if int(id) < 0:
-                raise Exception()
+                raise ValueError("id must be a positive integer")
         self._id = id
         self._location = None
         self._data = {}
@@ -82,7 +82,7 @@ class Environment(object):
         if isinstance(location, Location):
             self._location = location
         else:
-            raise Exception
+            raise ValueError("location must be a Location object, got %s" % type(location))
 
     def updateData(self, data):
         if isinstance(data, Data):
@@ -98,54 +98,54 @@ class Environment(object):
         :return: the top element of this `Environment`
         :rtype: `Element`
         """
-        doc = Document()
-        env = doc.createElement('environment')
+        env = etree.Element('environment')
         if self._updated:
-            if isinstance(self._updated, date):
-                env.setAttribute('updated', self._updated.isoformat())
+            if isinstance(self._updated, (date, datetime,)):
+                env.attrib['updated'] =  self._updated.isoformat()
             else:
-                env.setAttribute('updated', self._updated)
+                env.attrib['updated'] = self._updated
         if self._creator:
-            env.setAttribute('creator', self._creator)
+            env.attrib['creator'] = self._creator
         if self._id:
-            env.setAttribute('id', str(self._id))
+            env.attrib['id'] = str(self._id)
         if self._title:
-            tmp = doc.createElement('title')
-            tmp.appendChild(doc.createTextNode(self._title))
-            env.appendChild(tmp)
+            tmp = etree.Element('title')
+            tmp.text = self._title
+            env.append(tmp)
         if self._feed:
-            tmp = doc.createElement('feed')
-            tmp.appendChild(doc.createTextNode(self._feed))
-            env.appendChild(tmp)
+            tmp = etree.Element('feed')
+            tmptext = self._feed
+            env.append(tmp)
         if self._status:
-            tmp = doc.createElement('status')
-            tmp.appendChild(doc.createTextNode(self._status))
-            doc.appendChild(tmp)
+            tmp = etree.Element('status')
+            tmp.text = self._status
+            env.append(tmp)
         if self._description:
-            tmp = doc.createElement('description')
-            tmp.appendChild(doc.createTextNode(self._description))
-            env.appendChild(tmp)
+            tmp = etree.Element('description')
+            tmp.text = self._description
+            env.append(tmp)
         if self._icon:
-            tmp = doc.createElement('icon')
-            tmp.appendChild(doc.createTextNode(self._icon))
-            env.appendChild(tmp)
+            tmp = etree.Element('icon')
+            tmp.text = self._icon
+            env.append(tmp)
         if self._website:
-            tmp = doc.createElement('website')
-            tmp.appendChild(doc.createTextNode(self._website))
-            env.appendChild(tmp)
+            tmp = etree.Element('website')
+            tmp.text = self._website
+            env.append(tmp)
         if self._email:
-            tmp = doc.createElement('email')
-            tmp.appendChild(doc.createTextNode(self._email))
-            env.appendChild(tmp)
+            tmp = etree.Element('email')
+            tmp.text = self._email
+            env.append(tmp)
         if self._private is not None:
-            tmp = doc.createElement('private')
-            tmp.appendChild(doc.createTextNode(str(self._private).lower()))
-            env.appendChild(tmp)
+            tmp = etree.Element('private')
+            tmp.text = str(self._private).lower()
+            env.append(tmp)
         if self._location:            
-            env.appendChild(self._location.toeeml())
+            env.append(self._location.toeeml())
         for data in self._data.itervalues():
-            env.appendChild(data.toeeml())
+            env.append(data.toeeml())
         return env
+
 
 class EEML(object):
     """
@@ -165,16 +165,14 @@ class EEML(object):
         :return: the EEML document
         :rtype: `Document`
         """
-        doc = Document()
-        eeml = doc.createElement('eeml')
-        eeml.setAttribute('xmlns', 'http://www.eeml.org/xsd/005')
-        eeml.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
-        eeml.setAttribute('xsi:schemaLocation', 'http://www.eeml.org/xsd/005 http://www.eeml.org/xsd/005/005.xsd')
-        eeml.setAttribute('version', '5')
-        doc.appendChild(eeml)
-        tmp = self._environment.toeeml()
-        eeml.appendChild(tmp)
-        return doc
+        eeml = etree.Element('eeml')
+        eeml.attrib['xmlns:xsi'] = "http://www.w3.org/2001/XMLSchema-instance"
+        eeml.attrib['xsi:schemaLocation'] = 'http://www.eeml.org/xsd/005 http://www.eeml.org/xsd/005/005.xsd'
+        eeml.attrib['version'] = '5'
+
+        eeml.append(self._environment.toeeml())
+
+        return eeml
 
     def setEnvironment(self, env):
         """
@@ -188,7 +186,7 @@ class EEML(object):
         if isinstance(env, Environment):
             self._environment = env
         else:
-            raise Exception()
+            raise ValueError("env must be an Environment object, got %s" % type(env))
 
     def updateData(self, data):
         """
@@ -198,8 +196,10 @@ class EEML(object):
         :type data: `Data`, `list`
         """
 
-        if not self._environment: raise Exception()
+        if not self._environment: 
+            raise Exception("Environment not set, cannot update data.")
         self._environment.updateData(data)
+
 
 class Location(object):
     """
@@ -230,18 +230,22 @@ class Location(object):
         self._lat = lat
         self._lon = lon
         self._ele = ele
+
         if exposure:
             if exposure not in ['indoor', 'outdoor']:
-                raise Exception()
+                raise ValueError("exposure must be 'indoor' or 'outdoor', got '%s'" %exposure)
         self._exposure = exposure
+
         if domain:
             if domain not in ['physical', 'virtual']:
-                raise Exception()
-        self._domain = domain
+                raise ValueError("domain must be 'physical' or 'virtual', got '%s'"%domain)
+        self._domain = domain\
+
         if disposition:
             if disposition not in ['fixed', 'mobile']:
-                raise Exception()
+                raise ValueError("disposition must be 'fixed' or 'mobile', got '%s'"%disposition)
         self._disposition = disposition
+
     def toeeml(self):
         """
         Convert this class into a EEML DOM element.
@@ -250,32 +254,32 @@ class Location(object):
         :rtype: `Element`
         """
 
-        doc = Document()
-        loc = doc.createElement('location')
+        loc = etree.Element('location')
         if self._exposure:
-            loc.setAttribute('exposure', self._exposure)
+            loc.attrib['exposure'] =  self._exposure
         if self._domain:
-            loc.setAttribute('domain', self._domain)
+            loc.attrib['domain'] = self._domain
         if self._disposition:
-            loc.setAttribute('disposition', self._disposition)
+            loc.attrib['disposition'] =  self._disposition
         if self._name:
-            tmp = doc.createElement('name')
-            tmp.appendChild(doc.createTextNode(self._name))
-            loc.appendChild(tmp)
+            tmp = etree.Element('name')
+            tmp.text = self._name
+            loc.append(tmp)
         if self._lat:
-            tmp = doc.createElement('lat')
-            tmp.appendChild(doc.createTextNode(str(self._lat)))
-            loc.appendChild(tmp)
+            tmp = etree.Element('lat')
+            tmp.text = str(self._lat)
+            loc.append(tmp)
         if self._lon:
-            tmp = doc.createElement('lon')
-            tmp.appendChild(doc.createTextNode(str(self._lon)))
-            loc.appendChild(tmp)
+            tmp = etree.Element('lon')
+            tmp.text = str(self._lon)
+            loc.append(tmp)
         if self._ele:
-            tmp = doc.createElement('ele')
-            tmp.appendChild(doc.createTextNode(str(self._ele)))
-            loc.appendChild(tmp)
+            tmp = etree.Element('ele')
+            tmp.text = str(self._ele)
+            loc.append(tmp)
 
         return loc
+
 
 class Data(object):
     """
@@ -307,7 +311,7 @@ class Data(object):
         self._maxValue = maxValue
         if unit:
             if not isinstance(unit, Unit):
-                raise Exception()
+                raise ValueError("unit must be an instance of Unit, got %s" % type(unit))
         self._unit = unit
 
     def getId(self):
@@ -323,23 +327,26 @@ class Data(object):
         :rtype: `Element`
         """
 
-        doc = Document()
-        data = doc.createElement('data')
-        data.setAttribute('id', str(self._id))
+        data = etree.Element('data')
+        data.attrib['id'] = str(self._id)
         for tag in self._tags:
-            tmp = doc.createElement('tag')
-            tmp.appendChild(doc.createTextNode(tag))
-            data.appendChild(tmp)
-        tmp = doc.createElement('value')
+            tmp = etree.Element('tag')
+            tmp.text = tag
+            data.append(tmp)
+
+        tmp = etree.Element('value')
         if self._minValue is not None:
-            tmp.setAttribute('minValue', str(self._minValue))
+            tmp.attrib['minValue']  = str(self._minValue)
         if self._maxValue is not None:
-            tmp.setAttribute('maxValue', str(self._maxValue))
-        tmp.appendChild(doc.createTextNode(str(self._value)))
-        data.appendChild(tmp)
+            tmp.attrib['maxValue'] = str(self._maxValue)
+        tmp.text = str(self._value)
+        data.append(tmp)
+
         if self._unit:
-            data.appendChild(self._unit.toeeml())
+            data.append(self._unit.toeeml())
+
         return data
+
 
 class Unit(object):
     """
@@ -359,11 +366,13 @@ class Unit(object):
         """
 
         self._name = name
+        self.__valid_types = ['basicSI', 'derivedSI', 'conversionBasedUnits', 'derivedUnits', 'contextDependentUnits']
         if type:
-            if type in ['basicSI', 'derivedSI', 'conversionBasedUnits', 'derivedUnits', 'contextDependentUnits']:
+            if type in self.__valid_types:
                 self._type = type
             else:
-                raise Exception()
+                raise ValueError("type must be %s, got '%s'" % (
+                    ", ".join(['%s'%s for s in self.__valid_types]), type))
         self._type = type
         self._symbol = symbol
 
@@ -375,15 +384,16 @@ class Unit(object):
         :rtype: `Element`
         """
 
-        doc = Document()
-        unit = doc.createElement('unit')
+        unit = etree.Element('unit')
         if self._type:
-            unit.setAttribute('type', self._type)
+            unit.attrib['type'] =  self._type
         if self._symbol:
-            unit.setAttribute('symbol', self._symbol)
+            unit.attrib['symbol'] = self._symbol
 
-        unit.appendChild(doc.createTextNode(self._name))
+        unit.text = self._name
+
         return unit
+
 
 class Celsius(Unit):
     """
@@ -396,6 +406,7 @@ class Celsius(Unit):
         """
         Unit.__init__(self, 'Celsius', 'derivedSI', '°C')
 
+
 class Fahrenheit(Unit):
     """
     Degree Fahrenheit unit class.
@@ -406,6 +417,7 @@ class Fahrenheit(Unit):
         Initialize the `Unit` parameters with Fahrenheit.
         """
         Unit.__init__(self, 'Fahrenheit', 'derivedSI', '°F')
+
 
 class RH(Unit):
     """
@@ -418,6 +430,7 @@ class RH(Unit):
         """
         Unit.__init__(self, 'Relative Humidity', 'derivedUnits', '%RH')
 
+
 class Watt(Unit):
     """
     Watt unit class.
@@ -428,6 +441,7 @@ class Watt(Unit):
         Initialize the `Unit` parameters with Watt.
         """
         Unit.__init__(self, 'Watt', 'derivedSI', 'W')
+
 
 def create_eeml(env, loc, data):
     """
