@@ -4,7 +4,7 @@ from setuptools import find_packages
 import logging, multiprocessing
 
 setup(
-    name="Python EEML", 
+    name="python-eeml", 
     version="1.1.0",
     author="Peter Vizi",
     author_email="peter.vizi@gmail.com",
