@@ -20,7 +20,7 @@ class Pachube(object):
 
     host = 'api.pachube.com'
 
-    def __init__(self, url, key, env=None, loc=None, dat=[], use_https=True):
+    def __init__(self, url, key, env=None, loc=None, dat=[], use_https=True, timeout=10):
         """
         :param url: the api url either '/v2/feeds/1275.xml' or 1275
         :type url: `str`
@@ -45,6 +45,7 @@ class Pachube(object):
         self._key = key
         self._use_https = use_https
         self._eeml = eeml.create_eeml(env, loc, dat)
+        self._http_timeout = timeout
 
     def update(self, data):
         """
@@ -62,9 +63,9 @@ class Pachube(object):
         :raise Exception: if there was problem with the communication
         """
         if self._use_https:
-            conn = httplib.HTTPSConnection(self.host)
+            conn = httplib.HTTPSConnection(self.host, timeout=self._http_timeout)
         else:
-            conn = httplib.HTTPConnection(self.host)
+            conn = httplib.HTTPConnection(self.host, timeout=self._http_timeout)
 
         conn.request('PUT', self._url, etree.tostring(self._eeml.toeeml(), encoding='UTF-8'), {'X-PachubeApiKey': self._key})
         resp = conn.getresponse()
