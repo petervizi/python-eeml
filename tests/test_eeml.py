@@ -21,7 +21,7 @@ class TestEEML(TestCase):
             <lon>22.7</lon>
             <ele>0.2</ele>
             </location>
-            """.strip()), loc.toeeml()))
+            """.strip()), loc.toeeml(), reporter=self.fail))
 
 
     def test_good_unit(self):
@@ -30,7 +30,7 @@ class TestEEML(TestCase):
         assert_true(xml_compare(etree.fromstring(
             """
             <unit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" type="basicSI" symbol="C">Celzius</unit>
-            """.strip()), unit.toeeml()))
+            """.strip()), unit.toeeml(), reporter=self.fail))
 
 
     def test_good_data(self):
@@ -50,7 +50,7 @@ class TestEEML(TestCase):
             <current_value maxValue="100" minValue="0">10.0</current_value>
             <unit symbol="C" type="derivedSI">Celsius</unit>
             </data>
-            """.strip()), test_data.toeeml()))
+            """.strip()), test_data.toeeml(), reporter=self.fail))
 
 
     def test_good_environment(self):
@@ -75,7 +75,7 @@ class TestEEML(TestCase):
                 <icon>http://www.roomsomewhere/icon.png</icon>
                 <website>http://www.roomsomewhere/</website>
                 <email>myemail@roomsomewhere</email>
-            </environment>""".strip()), env.toeeml()))
+            </environment>""".strip()), env.toeeml(), reporter=self.fail))
 
     def test_good_create_doc(self):
         env = Environment('A Room Somewhere',
