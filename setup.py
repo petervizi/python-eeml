@@ -5,7 +5,7 @@ import logging, multiprocessing
 
 setup(
     name="python-eeml", 
-    version="1.1.0",
+    version="1.1.1",
     author="Peter Vizi",
     author_email="peter.vizi@gmail.com",
     url="https://github.com/petervizi/python-eeml",
