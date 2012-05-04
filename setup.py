@@ -13,6 +13,7 @@ setup(
     description="Python support for the Extended Environments Markup Language",
     license="GPLv3",
     install_requires = [
+        'lxml',
     ],
     test_suite = 'nose.collector',
     tests_require = [
