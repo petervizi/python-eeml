@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from datetime import date, datetime
-from lxml import etree
+
+try:
+    from lxml import etree
+except ImportError: # If lxml is not there try python standard lib
+    from xml.etree import ElementTree as etree
+
 from datastream import *
 
 __authors__ = "Peter Vizi"
