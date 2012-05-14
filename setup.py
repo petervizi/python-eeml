@@ -5,7 +5,7 @@ import logging, multiprocessing
 
 setup(
     name="python-eeml", 
-    version="1.1.1",
+    version="1.2.0",
     author="Peter Vizi",
     author_email="peter.vizi@gmail.com",
     url="https://github.com/petervizi/python-eeml",
@@ -24,7 +24,7 @@ setup(
     include_package_data = True,
     packages=find_packages(exclude=['ez_setup', 'tests']),
     keywords = [
-        'eeml', 'environment', 'xml', 'pachube',
+        'eeml', 'environment', 'xml', 'pachube', 'cosm'
     ],
     classifiers = [
         'Development Status :: 3 - Alpha',
