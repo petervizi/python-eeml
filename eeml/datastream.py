@@ -68,6 +68,7 @@ class Pachube(object):
             conn = httplib.HTTPConnection(self.host, timeout=self._http_timeout)
 
         conn.request('PUT', self._url, etree.tostring(self._eeml.toeeml(), encoding='UTF-8'), {'X-PachubeApiKey': self._key})
+        conn.sock.settimeout(5.0)
         resp = conn.getresponse()
         if resp.status != 200:
             try:
