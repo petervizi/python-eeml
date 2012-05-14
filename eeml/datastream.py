@@ -8,17 +8,17 @@ __license__ = "GPLv3"
 __version__ = "0.1"
 __docformat__ = "restructuredtext en"
 __doc__ = """
-The way to handle data streams, and put it to the pachube server.
+The way to handle data streams, and put it to the Cosm server.
 """
 
 url_pattern = re.compile("/v[12]/feeds/\d+\.xml")
 
-class Pachube(object):
+class Cosm(object):
     """
-    A class for manually updating a pachube data stream.
+    A class for manually updating a Cosm data stream.
     """
 
-    host = 'api.pachube.com'
+    host = 'api.cosm.com'
 
     def __init__(self, url, key, env=None, loc=None, dat=[], use_https=True, timeout=10):
         """
@@ -67,7 +67,7 @@ class Pachube(object):
         else:
             conn = httplib.HTTPConnection(self.host, timeout=self._http_timeout)
 
-        conn.request('PUT', self._url, etree.tostring(self._eeml.toeeml(), encoding='UTF-8'), {'X-PachubeApiKey': self._key})
+        conn.request('PUT', self._url, etree.tostring(self._eeml.toeeml(), encoding='UTF-8'), {'X-ApiKey': self._key})
         conn.sock.settimeout(5.0)
         resp = conn.getresponse()
         if resp.status != 200:
@@ -79,3 +79,9 @@ class Pachube(object):
             raise Exception(msg)
         resp.read()
         conn.close()
+
+class Pachube(Cosm):
+    """
+    For backward compatibility
+    """
+    pass

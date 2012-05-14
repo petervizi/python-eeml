@@ -10,7 +10,7 @@ API_KEY = 'YOUR_API_KEY'
 API_URL = 42166
 
 readings = [3, 4]
-pac = eeml.Pachube(API_URL, API_KEY)
+pac = eeml.Cosm(API_URL, API_KEY)
 pac.update([
         eeml.Data("Temperature", readings[0], unit=eeml.Celsius()), 
         eeml.Data("Humidity", readings[1], unit=eeml.RH())])

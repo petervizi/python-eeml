@@ -55,7 +55,7 @@ class TestEEML(TestCase):
 
     def test_good_environment(self):
         env = Environment('A Room Somewhere',
-            'http://www.pachube.com/feeds/1.xml',
+            'http://www.cosm.com/feeds/1.xml',
             'frozen',
             'This is a room somewhere',
             'http://www.roomsomewhere/icon.png',
@@ -79,7 +79,7 @@ class TestEEML(TestCase):
 
     def test_good_create_doc(self):
         env = Environment('A Room Somewhere',
-            'http://www.pachube.com/feeds/1.xml',
+            'http://www.cosm.com/feeds/1.xml',
             'frozen',
             'This is a room somewhere',
             'http://www.roomsomewhere/icon.png',
