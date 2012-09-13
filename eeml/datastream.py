@@ -13,6 +13,9 @@ The way to handle data streams, and put it to the Cosm server.
 
 url_pattern = re.compile("/v[12]/feeds/\d+\.xml")
 
+class CosmError(Exception):
+    pass
+
 class Cosm(object):
     """
     A class for manually updating a Cosm data stream.
@@ -60,7 +63,7 @@ class Cosm(object):
         """
         Put the information to the website.
 
-        :raise Exception: if there was problem with the communication
+        :raise CosmError: if there was problem with the communication
         """
         if self._use_https:
             conn = httplib.HTTPSConnection(self.host, timeout=self._http_timeout)
@@ -76,7 +79,7 @@ class Cosm(object):
                 msg = "%s: %s" % (errors[0].text, errors[1].text)
             except:
                 msg = resp.reason
-            raise Exception(msg)
+            raise CosmError(msg)
         resp.read()
         conn.close()
 
