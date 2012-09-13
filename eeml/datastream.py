@@ -3,14 +3,6 @@ import httplib
 import re
 from lxml import etree
 
-__authors__ = "Peter Vizi"
-__license__ = "GPLv3"
-__version__ = "0.1"
-__docformat__ = "restructuredtext en"
-__doc__ = """
-The way to handle data streams, and put it to the Cosm server.
-"""
-
 url_pattern = re.compile("/v[12]/feeds/\d+\.xml")
 
 class CosmError(Exception):
@@ -70,7 +62,7 @@ class Cosm(object):
         else:
             conn = httplib.HTTPConnection(self.host, timeout=self._http_timeout)
 
-        conn.request('PUT', self._url, etree.tostring(self._eeml.toeeml(), encoding='UTF-8'), {'X-ApiKey': self._key})
+        conn.request('PUT', self._url, self.geteeml(False), {'X-ApiKey': self._key})
         conn.sock.settimeout(5.0)
         resp = conn.getresponse()
         if resp.status != 200:
@@ -82,6 +74,9 @@ class Cosm(object):
             raise CosmError(msg)
         resp.read()
         conn.close()
+
+    def geteeml(self, pretty_print=True):
+        return etree.tostring(self._eeml.toeeml(), encoding='UTF-8', pretty_print=pretty_print)
 
 class Pachube(Cosm):
     """

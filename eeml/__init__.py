@@ -11,7 +11,6 @@ from datastream import *
 
 __authors__ = "Peter Vizi"
 __license__ = "GPLv3"
-__version__ = "0.1.005"
 __docformat__ = "restructuredtext en"
 __doc__ = """
 This package provides support for handling eeml files in python.
@@ -36,7 +35,7 @@ class Environment(object):
     """
 
     def __init__(self, title=None, feed=None, status=None, description=None,
-                 icon=None, website=None, email=None, updated=None, creator=None, id=None, private=None):
+                 icon=None, website=None, email=None, updated=None, creator=None, id_=None, private=None):
         """
         Create a new `Environment`.
 
@@ -60,13 +59,12 @@ class Environment(object):
         :type updated: `datetime.date`
         :param creator: the name of the creator
         :type creator: `str`
-        :param id: en identifier
-        :type id: `int`
+        :param id_: an identifier
+        :type id_: `int`
         """
         self._title = title
         self._feed = feed
-        if status:
-            if status not in ['frozen', 'live']:
+        if status and status not in ['frozen', 'live']:
                 raise ValueError("status must be either 'frozen' or 'live', got %s" % status)
         self._status = status
         self._description = description
@@ -75,10 +73,9 @@ class Environment(object):
         self._email = email
         self._updated = updated
         self._creator = creator
-        if id:
-            if int(id) < 0:
-                raise ValueError("id must be a positive integer")
-        self._id = id
+        if id_ and int(id_) < 0:
+            raise ValueError("id must be a positive integer")
+        self._id = id_
         self._location = None
         self._data = {}
         self._private = private
@@ -127,7 +124,7 @@ class Environment(object):
             env.append(tmp)
         if self._feed:
             tmp = _elem('feed')
-            tmptext = self._feed
+            tmp.text = self._feed
             env.append(tmp)
         if self._status:
             tmp = _elem('status')
@@ -244,19 +241,16 @@ class Location(object):
         self._lon = lon
         self._ele = ele
 
-        if exposure:
-            if exposure not in ['indoor', 'outdoor']:
-                raise ValueError("exposure must be 'indoor' or 'outdoor', got '%s'" %exposure)
+        if exposure and exposure not in ['indoor', 'outdoor']:
+            raise ValueError("exposure must be 'indoor' or 'outdoor', got '%s'" % exposure)
         self._exposure = exposure
 
-        if domain:
-            if domain not in ['physical', 'virtual']:
-                raise ValueError("domain must be 'physical' or 'virtual', got '%s'"%domain)
-        self._domain = domain\
+        if domain and domain not in ['physical', 'virtual']:
+            raise ValueError("domain must be 'physical' or 'virtual', got '%s'" % domain)
+        self._domain = domain
 
-        if disposition:
-            if disposition not in ['fixed', 'mobile']:
-                raise ValueError("disposition must be 'fixed' or 'mobile', got '%s'"%disposition)
+        if disposition and disposition not in ['fixed', 'mobile']:
+            raise ValueError("disposition must be 'fixed' or 'mobile', got '%s'" % disposition)
         self._disposition = disposition
 
     def toeeml(self):
@@ -299,12 +293,12 @@ class Data(object):
     The Data element of the document
     """
 
-    def __init__(self, id, value, tags=[], minValue=None, maxValue=None, unit=None):
+    def __init__(self, id_, value, tags=[], minValue=None, maxValue=None, unit=None, at=None):
         """
         Create a new Data
 
-        :param id: the identifier of this data
-        :type id: `int`
+        :param id_: the identifier of this data
+        :type id_: `int`
         :param value: the value of the data
         :type value: `float`
         :param tags: the tags on this data
@@ -316,16 +310,18 @@ class Data(object):
         :param unit: a `Unit` for this data
         :type unit: `Unit`
         """
-        self._id = id        
+        self._id = id_
         self._value = value
         self._tags = tags
         
         self._minValue = minValue
         self._maxValue = maxValue
-        if unit:
-            if not isinstance(unit, Unit):
-                raise ValueError("unit must be an instance of Unit, got %s" % type(unit))
+        if unit is not None and not isinstance(unit, Unit):
+            raise ValueError("unit must be an instance of Unit, got %s" % type(unit))
         self._unit = unit
+        if at is not None and not isinstance(at, datetime):
+            raise ValueError("at must be an instance of datetime.datetime, got %s" % type(at))
+        self._at = at
 
     def getId(self):
         return self._id
@@ -352,6 +348,8 @@ class Data(object):
             tmp.attrib['minValue']  = str(self._minValue)
         if self._maxValue is not None:
             tmp.attrib['maxValue'] = str(self._maxValue)
+        if self._at is not None:
+            tmp.attrib['at'] = self._at.isoformat()
         tmp.text = str(self._value)
         data.append(tmp)
 
@@ -366,13 +364,13 @@ class Unit(object):
     This class represents a unit element in the EEML document.
     """
 
-    def __init__(self, name, type=None, symbol=None):
+    def __init__(self, name, type_=None, symbol=None):
         """
         :raise Exception: is sg is wrong
 
         :param name: the name of this unit (eg. meter, Celsius)
         :type name: `str`
-        :param type: the type of this unit (``basicSI``, ``derivedSI``, ``conversionBasedUnits``, ``derivedUnits``, ``contextDependentUnits``)
+        :param type_: the type of this unit (``basicSI``, ``derivedSI``, ``conversionBasedUnits``, ``derivedUnits``, ``contextDependentUnits``)
         :type type: `str`
         :param symbol: the symbol of this unit (eg. m, C)
         :type symbol: `str`
@@ -380,13 +378,12 @@ class Unit(object):
 
         self._name = name
         self.__valid_types = ['basicSI', 'derivedSI', 'conversionBasedUnits', 'derivedUnits', 'contextDependentUnits']
-        if type:
-            if type in self.__valid_types:
-                self._type = type
-            else:
-                raise ValueError("type must be %s, got '%s'" % (
-                    ", ".join(['%s'%s for s in self.__valid_types]), type))
-        self._type = type
+        if type_ and type_ in self.__valid_types:
+            self._type = type
+        else:
+            raise ValueError("type must be %s, got '%s'" % (
+                ", ".join(['%s'%s for s in self.__valid_types]), type))
+        self._type = type_
         self._symbol = symbol
 
     def toeeml(self):
