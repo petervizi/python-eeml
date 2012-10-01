@@ -5,11 +5,11 @@ import logging, multiprocessing
 
 setup(
     name="python-eeml", 
-    version="1.3.0",
+    version="2.0.0",
     author="Peter Vizi",
     author_email="peter.vizi@gmail.com",
     url="https://github.com/petervizi/python-eeml",
-    download_url="https://github.com/petervizi/python-eeml/zipball/1.3.0",
+    download_url="https://github.com/petervizi/python-eeml/zipball/2.0.0",
     description="Python support for the Extended Environments Markup Language",
     license="GPLv3",
     install_requires = [
