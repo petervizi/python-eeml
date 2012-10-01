@@ -33,4 +33,5 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
+    use_2to3 = True,
 )

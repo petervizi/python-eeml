@@ -17,4 +17,4 @@ pac.update([
         eeml.Data("Temperature", readings[0], unit=eeml.Celsius(), at=at), 
         eeml.Data("Humidity", readings[1], unit=eeml.RH())])
 pac.put()
-print pac.geteeml()
+print(pac.geteeml())
