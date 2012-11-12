@@ -393,10 +393,12 @@ class DataPoints(object):
             if isinstance(value, dict):
                 at = value['at']
                 value = value['val']
-    
+                
             tmp = _elem('value')
             if at is not None:
-                tmp.attrib['at'] = at.isoformat()
+                if isinstance(at, (date, datetime,)):
+                    at =  at.isoformat()
+                tmp.attrib['at'] = at
             tmp.text = str(value)
             data.append(tmp)
             

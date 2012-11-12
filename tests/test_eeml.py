@@ -53,6 +53,19 @@ class TestEEML(TestCase):
             """.strip()), test_data.toeeml(), reporter=self.fail))
 
 
+    def test_good_datapoints(self):
+        datapoints = DataPoints([0, 1, {'val': 2, 'at': '2007-05-04T18:13:51.0Z'}])
+        
+        assert_true(xml_compare(etree.fromstring(
+            """
+            <datapoints xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1">
+                <value>0</value>
+                <value>1</value>
+                <value at="2007-05-04T18:13:51.0Z">2</value>
+            </datapoints>
+            """.strip()), datapoints.toeeml(), reporter=self.fail))
+
+
     def test_good_environment(self):
         env = Environment('A Room Somewhere',
             'http://www.cosm.com/feeds/1.xml',
