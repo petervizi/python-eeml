@@ -35,7 +35,7 @@ class Environment(object):
     """
 
     def __init__(self, title=None, feed=None, status=None, description=None,
-                 icon=None, website=None, email=None, updated=None, creator=None, id_=None, private=None):
+                 icon=None, website=None, email=None, updated=None, creator=None, id=None, private=None):
         """
         Create a new `Environment`.
 
@@ -59,8 +59,8 @@ class Environment(object):
         :type updated: `datetime.date`
         :param creator: the name of the creator
         :type creator: `str`
-        :param id_: an identifier
-        :type id_: `int`
+        :param id: an identifier
+        :type id: `int`
         """
         self._title = title
         self._feed = feed
@@ -73,11 +73,11 @@ class Environment(object):
         self._email = email
         self._updated = updated
         self._creator = creator
-        if id_ and int(id_) < 0:
+        if id and int(id) < 0:
             raise ValueError("id must be a positive integer")
-        self._id = id_
+        self._id = id
         self._location = None
-        self._data = {}
+        self._data = []
         self._private = private
 
     def setLocation(self, location):
@@ -96,10 +96,13 @@ class Environment(object):
 
     def updateData(self, data):
         if isinstance(data, Data):
-            self._data[data.id] = data
+            self._data.append(data)
         elif isinstance(data, list):
             for d in data:
-                self._data[d.id] = d
+                self._data.append(d)
+        elif isinstance(data, DataPoints):
+            self._data.append(Data(None, None, datapoints=data))
+            
 
     def toeeml(self):
         """
@@ -116,7 +119,7 @@ class Environment(object):
                 env.attrib['updated'] = self._updated
         if self._creator:
             env.attrib['creator'] = self._creator
-        if self._id:
+        if self._id is not None:
             env.attrib['id'] = str(self._id)
         if self._title:
             tmp = _elem('title')
@@ -152,7 +155,7 @@ class Environment(object):
             env.append(tmp)
         if self._location:            
             env.append(self._location.toeeml())
-        for data in self._data.itervalues():
+        for data in self._data:
             env.append(data.toeeml())
         return env
 
@@ -293,12 +296,12 @@ class Data(object):
     The Data element of the document
     """
 
-    def __init__(self, id_, value, tags=[], minValue=None, maxValue=None, unit=None, at=None, datapoints=None):
+    def __init__(self, id, value, tags=[], minValue=None, maxValue=None, unit=None, at=None, datapoints=None):
         """
         Create a new Data
 
-        :param id_: the identifier of this data
-        :type id_: `int`
+        :param id: the identifier of this data
+        :type id: `int`
         :param value: the value of the data
         :type value: `float`
         :param tags: the tags on this data
@@ -312,7 +315,7 @@ class Data(object):
         :param datapoints: additional datapoints beyond current_value
         :type datapoints: `DataPoint`
         """
-        self._id = id_
+        self._id = id
         self._value = value
         self._tags = tags
         
@@ -326,10 +329,10 @@ class Data(object):
         self._at = at
         self._datapoints = datapoints
 
-    def getId(self):
-        return self._id
+    # def getId(self):
+    #     return self._id
 
-    id = property(getId)
+    # id = property(getId)
 
     def toeeml(self):
         """
@@ -340,21 +343,24 @@ class Data(object):
         """
 
         data = _elem('data')
-        data.attrib['id'] = str(self._id)
+        if self._id is not None:
+            data.attrib['id'] = str(self._id)
+
         for tag in self._tags:
             tmp = _elem('tag')
             tmp.text = tag
             data.append(tmp)
 
-        tmp = _elem('current_value')
-        if self._minValue is not None:
-            tmp.attrib['minValue']  = str(self._minValue)
-        if self._maxValue is not None:
-            tmp.attrib['maxValue'] = str(self._maxValue)
-        if self._at is not None:
-            tmp.attrib['at'] = self._at.isoformat()
-        tmp.text = str(self._value)
-        data.append(tmp)
+        if self._value:
+            tmp = _elem('current_value')
+            if self._minValue is not None:
+                tmp.attrib['minValue']  = str(self._minValue)
+            if self._maxValue is not None:
+                tmp.attrib['maxValue'] = str(self._maxValue)
+            if self._at is not None:
+                tmp.attrib['at'] = self._at.isoformat()
+            tmp.text = str(self._value)
+            data.append(tmp)
 
         if self._unit:
             data.append(self._unit.toeeml())
@@ -373,7 +379,7 @@ class DataPoints(object):
         """
         Create a new DataPoints
 
-        :param values: the value of the data points, either as list of values or list of val/at dictionaries
+        :param values: the value of the data points, pairs of (value, date), where date is optional
         :type values: `float`
         """
         self._values = values
@@ -388,18 +394,11 @@ class DataPoints(object):
 
         data = _elem('datapoints')
 
-        for value in self._values:
-            at = None
-            if isinstance(value, dict):
-                at = value['at']
-                value = value['val']
-                
+        for pair in self._values:
             tmp = _elem('value')
-            if at is not None:
-                if isinstance(at, (date, datetime,)):
-                    at =  at.isoformat()
-                tmp.attrib['at'] = at
-            tmp.text = str(value)
+            tmp.text = str(pair[0])
+            if len(pair) > 1:
+                tmp.attrib['at'] = pair[1].isoformat()
             data.append(tmp)
             
         return data
