@@ -293,7 +293,7 @@ class Data(object):
     The Data element of the document
     """
 
-    def __init__(self, id_, value, tags=[], minValue=None, maxValue=None, unit=None, at=None):
+    def __init__(self, id_, value, tags=[], minValue=None, maxValue=None, unit=None, at=None, datapoints=None):
         """
         Create a new Data
 
@@ -309,6 +309,8 @@ class Data(object):
         :type minValue: `float`
         :param unit: a `Unit` for this data
         :type unit: `Unit`
+        :param datapoints: additional datapoints beyond current_value
+        :type datapoints: `DataPoint`
         """
         self._id = id_
         self._value = value
@@ -322,6 +324,7 @@ class Data(object):
         if at is not None and not isinstance(at, datetime):
             raise ValueError("at must be an instance of datetime.datetime, got %s" % type(at))
         self._at = at
+        self._datapoints = datapoints
 
     def getId(self):
         return self._id
@@ -356,6 +359,47 @@ class Data(object):
         if self._unit:
             data.append(self._unit.toeeml())
 
+        if self._datapoints:
+            data.append(self._datapoints.toeeml())
+            
+        return data
+
+class DataPoints(object):
+    """
+    The DataPoints element of the document
+    """
+
+    def __init__(self, values=[]):
+        """
+        Create a new DataPoints
+
+        :param values: the value of the data points, either as list of values or list of val/at dictionaries
+        :type values: `float`
+        """
+        self._values = values
+    
+    def toeeml(self):
+        """
+        Convert this element into a DOM object.
+
+        :return: a data element
+        :rtype: `Element`
+        """
+
+        data = _elem('datapoints')
+
+        for value in self._values:
+            at = None
+            if isinstance(value, dict):
+                at = value['at']
+                value = value['val']
+    
+            tmp = _elem('value')
+            if at is not None:
+                tmp.attrib['at'] = at.isoformat()
+            tmp.text = str(value)
+            data.append(tmp)
+            
         return data
 
 
