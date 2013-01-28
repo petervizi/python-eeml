@@ -4,6 +4,8 @@ python-eeml
 
 :authors: peter.vizi@gmail.com
 
+.. image:: https://travis-ci.org/petervizi/python-eeml.png?branch=master
+
 Intorduction
 ============
 
