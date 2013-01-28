@@ -1,3 +1,7 @@
+"""
+These classes used during communication with the servers.
+"""
+
 import eeml
 import httplib
 import re
@@ -6,6 +10,9 @@ from lxml import etree
 url_pattern = re.compile("/v[12]/feeds/\d+\.xml")
 
 class CosmError(Exception):
+    """
+    Exception type of COSM communication
+    """
     pass
 
 class Cosm(object):
@@ -15,7 +22,8 @@ class Cosm(object):
 
     host = 'api.cosm.com'
 
-    def __init__(self, url, key, env=None, loc=None, dat=[], use_https=True, timeout=10):
+    def __init__(self, url, key, env=None, loc=None, dat=list(),
+                 use_https=True, timeout=10):
         """
         :param url: the api url either '/v2/feeds/1275.xml' or 1275
         :type url: `str`
@@ -28,7 +36,8 @@ class Cosm(object):
             if(url_pattern.match(url)):
                 self._url = url
             else:
-                raise ValueError("The url argument has to be in the form '/v2/feeds/1275.xml' or 1275")
+                raise ValueError("The url argument has to be in the form "
+                                 "'/v2/feeds/1275.xml' or 1275")
         else:
             try:
                 if int(url) == url:
@@ -36,7 +45,8 @@ class Cosm(object):
                 else:
                     raise TypeError('')
             except TypeError:
-                raise TypeError("The url argument has to be in the form '/v2/feeds/1275.xml' or 1275")
+                raise TypeError("The url argument has to be in the form "
+                                "'/v2/feeds/1275.xml' or 1275")
         self._key = key
         self._use_https = use_https
         self._eeml = eeml.create_eeml(env, loc, dat)
@@ -58,11 +68,14 @@ class Cosm(object):
         :raise CosmError: if there was problem with the communication
         """
         if self._use_https:
-            conn = httplib.HTTPSConnection(self.host, timeout=self._http_timeout)
+            conn = httplib.HTTPSConnection(self.host,
+                                           timeout=self._http_timeout)
         else:
-            conn = httplib.HTTPConnection(self.host, timeout=self._http_timeout)
+            conn = httplib.HTTPConnection(self.host,
+                                          timeout=self._http_timeout)
 
-        conn.request('PUT', self._url, self.geteeml(False), {'X-ApiKey': self._key})
+        conn.request('PUT', self._url, self.geteeml(False),
+                     {'X-ApiKey': self._key})
         conn.sock.settimeout(5.0)
         resp = conn.getresponse()
         if resp.status != 200:
@@ -76,7 +89,11 @@ class Cosm(object):
         conn.close()
 
     def geteeml(self, pretty_print=True):
-        return etree.tostring(self._eeml.toeeml(), encoding='UTF-8', pretty_print=pretty_print)
+        """
+        Return the EEML document as a string
+        """
+        return etree.tostring(self._eeml.toeeml(), encoding='UTF-8',
+                              pretty_print=pretty_print)
 
 class Pachube(Cosm):
     """

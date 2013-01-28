@@ -36,9 +36,9 @@ class TestEEML(TestCase):
     def test_good_data(self):
         u = Unit('Celsius', 'derivedSI', 'C')
         test_data = Data(
-            id=0,
+            id_=0,
             value=10.0, 
-            tags=['length'], 
+            tags=['length', 'foo'], 
             minValue=0, 
             maxValue=100, 
             unit=u)
@@ -47,6 +47,7 @@ class TestEEML(TestCase):
             """
             <data xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" id="0">
             <tag>length</tag>
+            <tag>foo</tag>
             <current_value maxValue="100" minValue="0">10.0</current_value>
             <unit symbol="C" type="derivedSI">Celsius</unit>
             </data>
@@ -63,7 +64,7 @@ class TestEEML(TestCase):
                           'myemail@roomsomewhere',
                           updated='2007-05-04T18:13:51.0Z',
                           creator='http://www.somewhere',
-                          id=1)
+                          id_=1)
 
         datapoints = DataPoints([(0,), (1,), (2, datetime(2007, 5, 4, 18, 13, 51))])
 
@@ -102,7 +103,7 @@ class TestEEML(TestCase):
             'myemail@roomsomewhere',
             updated='2007-05-04T18:13:51.0Z',
             creator='http://www.somewhere',
-            id=1)
+            id_=1)
 
         assert_true(xml_compare(etree.fromstring(
             """
@@ -126,7 +127,7 @@ class TestEEML(TestCase):
             'myemail@roomsomewhere',
             updated='2007-05-04T18:13:51.0Z',
             creator='http://www.somewhere',
-            id=1)
+            id_=1)
         loc = Location('My Room', 32.4, 22.7, 0.2, 'indoor', 'physical', 'fixed')
         u = Unit('Celsius', 'derivedSI', 'C')
         dat = []
@@ -182,3 +183,68 @@ class TestEEML(TestCase):
             </eeml>
             """.strip()), final, reporter=self.fail))
 
+    def test_status(self):
+        Environment(status='frozen')
+        Environment(status='live')
+        with self.assertRaises(ValueError):
+            Environment(status='foobar')
+
+    def test_env_location(self):
+        env = Environment()
+        env.setLocation(Location())
+        with self.assertRaises(ValueError):
+            env.setLocation('foobar')
+
+    def test_eeml_ctor(self):
+        EEML(Environment())
+        with self.assertRaises(ValueError):
+            EEML('foobar')
+
+    def test_exposure(self):
+        Location(exposure='indoor')
+        Location(exposure='outdoor')
+        with self.assertRaises(ValueError):
+            Location(exposure='foobar')
+
+    def test_domain(self):
+        Location(domain='physical')
+        Location(domain='virtual')
+        with self.assertRaises(ValueError):
+            Location(domain='foobar')
+
+    def test_disposition(self):
+        Location(disposition='fixed')
+        Location(disposition='mobile')
+        with self.assertRaises(ValueError):
+            Location(disposition='foobar')
+
+    def test_unit(self):
+        Data(1, 2, unit=None)
+        Data(1, 2, unit=Celsius())
+        with self.assertRaises(ValueError):
+            Data(1, 2, unit='foobar')
+
+    def test_at(self):
+        Data(1, 2, at=datetime.now())
+        with self.assertRaises(ValueError):
+            Data(1, 2, at='foobar')
+
+    def test_unit_types(self):
+        for i in ['basicSI', 'derivedSI', 'conversionBasedUnits',
+                  'derivedUnits', 'contextDependentUnits']:
+            Unit('foobar', i)
+        with self.assertRaises(ValueError):
+            Unit('foobar', 'barbar')
+
+    def test_pachube(self):
+        Pachube('/v2/feeds/1234.xml', 'ASDF')
+        Pachube(1234, 'ASDF')
+        with self.assertRaises(ValueError):
+            Pachube('12.xml', 'ASDF')
+
+    def test_cosm(self):
+        Cosm('/v2/feeds/1234.xml', 'ASDF')
+        Cosm(1234, 'ASDF')
+        with self.assertRaises(ValueError):
+            Cosm('api.cosm.com/v2/feeds/', 'ASDF')
+        

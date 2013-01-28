@@ -1,18 +1,5 @@
 # -*- coding: utf-8 -*-
-
-from datetime import date, datetime
-
-try:
-    from lxml import etree
-except ImportError: # If lxml is not there try python standard lib
-    from xml.etree import ElementTree as etree
-
-from datastream import *
-
-__authors__ = "Peter Vizi"
-__license__ = "GPLv3"
-__docformat__ = "restructuredtext en"
-__doc__ = """
+"""
 This package provides support for handling eeml files in python.
 
 Usage
@@ -21,13 +8,51 @@ Usage
 Look at the test directory.
 """
 
-EEML_NAMESPACE = 'http://www.eeml.org/xsd/0.5.1'
+from datetime import date, datetime
+
+try:
+    from lxml import etree
+except ImportError: # If lxml is not there try python standard lib
+    from xml.etree import ElementTree as etree
+
+from eeml.datastream import Cosm, CosmError, Pachube
+
+__authors__ = "Peter Vizi"
+__license__ = "GPLv3"
+__docformat__ = "restructuredtext en"
+
+EEML_SCHEMA_VERSION = '0.5.1'
+EEML_NAMESPACE = 'http://www.eeml.org/xsd/{}'.format(EEML_SCHEMA_VERSION)
 XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
+SCHEMA_LOCATION = ('{{{}}}schemaLocation'.format(XSI_NAMESPACE),
+                   EEML_NAMESPACE +
+                   ' http://www.eeml.org/xsd/{0}/{0}.xsd'
+                   .format(EEML_SCHEMA_VERSION))
 NSMAP = {None: EEML_NAMESPACE,
          'xsi': XSI_NAMESPACE}
 
 def _elem(name):
-    return etree.Element("{%s}%s" % (EEML_NAMESPACE, name), nsmap=NSMAP)
+    """
+    Create an element in the EEML namespace
+    """
+    return etree.Element("{{{}}}{}".format(EEML_NAMESPACE, name), nsmap=NSMAP)
+
+
+def _addE(env, attr, name):
+    """
+    Helper method to add child if not None
+    """
+    if attr is not None:
+        tmp = _elem(name)
+        tmp.text = str(attr)
+        env.append(tmp)
+
+def _addA(env, attr, name):
+    """
+    Helper method to add attribute if not None
+    """
+    if attr is not None:
+        env.attrib[name] = str(attr)
 
 class Environment(object):
     """
@@ -35,7 +60,8 @@ class Environment(object):
     """
 
     def __init__(self, title=None, feed=None, status=None, description=None,
-                 icon=None, website=None, email=None, updated=None, creator=None, id=None, private=None):
+                 icon=None, website=None, email=None, updated=None,
+                 creator=None, id_=None, private=None):
         """
         Create a new `Environment`.
 
@@ -59,13 +85,14 @@ class Environment(object):
         :type updated: `datetime.date`
         :param creator: the name of the creator
         :type creator: `str`
-        :param id: an identifier
-        :type id: `int`
+        :param id_: an identifier
+        :type id_: `int`
         """
         self._title = title
         self._feed = feed
         if status and status not in ['frozen', 'live']:
-                raise ValueError("status must be either 'frozen' or 'live', got %s" % status)
+            raise ValueError("status must be either 'frozen' or 'live', "
+                             "got {}".format(status))
         self._status = status
         self._description = description
         self._icon = icon
@@ -73,9 +100,9 @@ class Environment(object):
         self._email = email
         self._updated = updated
         self._creator = creator
-        if id and int(id) < 0:
+        if id_ is not None and int(id_) < 0:
             raise ValueError("id must be a positive integer")
-        self._id = id
+        self._id = id_
         self._location = None
         self._data = []
         self._private = private
@@ -92,17 +119,23 @@ class Environment(object):
         if isinstance(location, Location):
             self._location = location
         else:
-            raise ValueError("location must be a Location object, got %s" % type(location))
+            raise ValueError("location must be a Location object, got {}"
+                             .format(type(location)))
 
     def updateData(self, data):
+        """
+        Update data
+
+        :param data: the data to add
+        :type data: `Data`, list of `Data` or `DataPoints` object
+        """
         if isinstance(data, Data):
             self._data.append(data)
         elif isinstance(data, list):
-            for d in data:
-                self._data.append(d)
+            for dat in data:
+                self._data.append(dat)
         elif isinstance(data, DataPoints):
             self._data.append(Data(None, None, datapoints=data))
-            
 
     def toeeml(self):
         """
@@ -117,42 +150,16 @@ class Environment(object):
                 env.attrib['updated'] =  self._updated.isoformat()
             else:
                 env.attrib['updated'] = self._updated
-        if self._creator:
-            env.attrib['creator'] = self._creator
-        if self._id is not None:
-            env.attrib['id'] = str(self._id)
-        if self._title:
-            tmp = _elem('title')
-            tmp.text = self._title
-            env.append(tmp)
-        if self._feed:
-            tmp = _elem('feed')
-            tmp.text = self._feed
-            env.append(tmp)
-        if self._status:
-            tmp = _elem('status')
-            tmp.text = self._status
-            env.append(tmp)
-        if self._description:
-            tmp = _elem('description')
-            tmp.text = self._description
-            env.append(tmp)
-        if self._icon:
-            tmp = _elem('icon')
-            tmp.text = self._icon
-            env.append(tmp)
-        if self._website:
-            tmp = _elem('website')
-            tmp.text = self._website
-            env.append(tmp)
-        if self._email:
-            tmp = _elem('email')
-            tmp.text = self._email
-            env.append(tmp)
-        if self._private is not None:
-            tmp = _elem('private')
-            tmp.text = str(self._private).lower()
-            env.append(tmp)
+        _addA(env, self._creator, 'creator')
+        _addA(env, self._id, 'id')
+        _addE(env, self._title, 'title')
+        _addE(env, self._feed, 'feed')
+        _addE(env, self._status, 'status')
+        _addE(env, self._description, 'description')
+        _addE(env, self._icon, 'icon')
+        _addE(env, self._website, 'website')
+        _addE(env, self._email, 'email')
+        _addE(env, self._private, 'private')
         if self._location:            
             env.append(self._location.toeeml())
         for data in self._data:
@@ -168,8 +175,12 @@ class EEML(object):
     def __init__(self, environment=Environment()):
         """
         Create a new EEML document.
+
+        :param environment: the environment in this EEML document
+        :type environment: `Environemnt`
         """
-        self._environment = environment #: the environments in this EEML document
+        self._environment = None
+        self.setEnvironment(environment)
 
     def toeeml(self):
         """
@@ -180,8 +191,8 @@ class EEML(object):
         """
         eeml = _elem('eeml')
 
-        eeml.attrib['{%s}schemaLocation' % XSI_NAMESPACE] = 'http://www.eeml.org/xsd/0.5.1 http://www.eeml.org/xsd/0.5.1/0.5.1.xsd'
-        eeml.attrib['version'] = '0.5.1'
+        eeml.attrib[SCHEMA_LOCATION[0]] = SCHEMA_LOCATION[1]    
+        eeml.attrib['version'] = EEML_SCHEMA_VERSION
 
         eeml.append(self._environment.toeeml())
 
@@ -199,7 +210,8 @@ class EEML(object):
         if isinstance(env, Environment):
             self._environment = env
         else:
-            raise ValueError("env must be an Environment object, got %s" % type(env))
+            raise ValueError("env must be an Environment object, got {}"
+                             .format(type(env)))
 
     def updateData(self, data):
         """
@@ -245,15 +257,18 @@ class Location(object):
         self._ele = ele
 
         if exposure and exposure not in ['indoor', 'outdoor']:
-            raise ValueError("exposure must be 'indoor' or 'outdoor', got '%s'" % exposure)
+            raise ValueError("exposure must be 'indoor' or 'outdoor', got '{}'"
+                             .format(exposure))
         self._exposure = exposure
 
         if domain and domain not in ['physical', 'virtual']:
-            raise ValueError("domain must be 'physical' or 'virtual', got '%s'" % domain)
+            raise ValueError("domain must be 'physical' or 'virtual', got '{}'"
+                             .format(domain))
         self._domain = domain
 
         if disposition and disposition not in ['fixed', 'mobile']:
-            raise ValueError("disposition must be 'fixed' or 'mobile', got '%s'" % disposition)
+            raise ValueError("disposition must be 'fixed' or 'mobile', got '{}'"
+                             .format(disposition))
         self._disposition = disposition
 
     def toeeml(self):
@@ -265,28 +280,14 @@ class Location(object):
         """
 
         loc = _elem('location')
-        if self._exposure:
-            loc.attrib['exposure'] =  self._exposure
-        if self._domain:
-            loc.attrib['domain'] = self._domain
-        if self._disposition:
-            loc.attrib['disposition'] =  self._disposition
-        if self._name:
-            tmp = _elem('name')
-            tmp.text = self._name
-            loc.append(tmp)
-        if self._lat:
-            tmp = _elem('lat')
-            tmp.text = str(self._lat)
-            loc.append(tmp)
-        if self._lon:
-            tmp = _elem('lon')
-            tmp.text = str(self._lon)
-            loc.append(tmp)
-        if self._ele:
-            tmp = _elem('ele')
-            tmp.text = str(self._ele)
-            loc.append(tmp)
+
+        _addA(loc, self._exposure, 'exposure')
+        _addA(loc, self._domain, 'domain')
+        _addA(loc, self._disposition, 'disposition')
+        _addE(loc, self._name, 'name')
+        _addE(loc, self._lat, 'lat')
+        _addE(loc, self._lon, 'lon')
+        _addE(loc, self._ele, 'ele')
 
         return loc
 
@@ -296,12 +297,13 @@ class Data(object):
     The Data element of the document
     """
 
-    def __init__(self, id, value, tags=[], minValue=None, maxValue=None, unit=None, at=None, datapoints=None):
+    def __init__(self, id_, value, tags=list(), minValue=None, maxValue=None,
+                 unit=None, at=None, datapoints=None):
         """
         Create a new Data
 
-        :param id: the identifier of this data
-        :type id: `int`
+        :param id_: the identifier of this data
+        :type id_: `int`
         :param value: the value of the data
         :type value: `float`
         :param tags: the tags on this data
@@ -315,24 +317,21 @@ class Data(object):
         :param datapoints: additional datapoints beyond current_value
         :type datapoints: `DataPoint`
         """
-        self._id = id
+        self._id = id_
         self._value = value
         self._tags = tags
         
         self._minValue = minValue
         self._maxValue = maxValue
         if unit is not None and not isinstance(unit, Unit):
-            raise ValueError("unit must be an instance of Unit, got %s" % type(unit))
+            raise ValueError("unit must be an instance of Unit, got {}"
+                             .format(type(unit)))
         self._unit = unit
         if at is not None and not isinstance(at, datetime):
-            raise ValueError("at must be an instance of datetime.datetime, got %s" % type(at))
+            raise ValueError("at must be an instance of datetime.datetime, "
+                             "got {}".format(type(at)))
         self._at = at
         self._datapoints = datapoints
-
-    # def getId(self):
-    #     return self._id
-
-    # id = property(getId)
 
     def toeeml(self):
         """
@@ -343,20 +342,15 @@ class Data(object):
         """
 
         data = _elem('data')
-        if self._id is not None:
-            data.attrib['id'] = str(self._id)
 
+        _addA(data, self._id, 'id')
         for tag in self._tags:
-            tmp = _elem('tag')
-            tmp.text = tag
-            data.append(tmp)
+            _addE(data, tag, 'tag')
 
         if self._value:
             tmp = _elem('current_value')
-            if self._minValue is not None:
-                tmp.attrib['minValue']  = str(self._minValue)
-            if self._maxValue is not None:
-                tmp.attrib['maxValue'] = str(self._maxValue)
+            _addA(tmp, self._minValue, 'minValue')
+            _addA(tmp, self._maxValue, 'maxValue')
             if self._at is not None:
                 tmp.attrib['at'] = self._at.isoformat()
             tmp.text = str(self._value)
@@ -375,7 +369,7 @@ class DataPoints(object):
     The DataPoints element of the document
     """
 
-    def __init__(self, values=[]):
+    def __init__(self, values=list()):
         """
         Create a new DataPoints
 
@@ -409,6 +403,9 @@ class Unit(object):
     This class represents a unit element in the EEML document.
     """
 
+    __valid_types = ['basicSI', 'derivedSI', 'conversionBasedUnits',
+                     'derivedUnits', 'contextDependentUnits']
+
     def __init__(self, name, type_=None, symbol=None):
         """
         :raise Exception: is sg is wrong
@@ -422,12 +419,9 @@ class Unit(object):
         """
 
         self._name = name
-        self.__valid_types = ['basicSI', 'derivedSI', 'conversionBasedUnits', 'derivedUnits', 'contextDependentUnits']
-        if type_ and type_ in self.__valid_types:
-            self._type = type
-        else:
-            raise ValueError("type must be %s, got '%s'" % (
-                ", ".join(['%s'%s for s in self.__valid_types]), type))
+        if type_ is not None and not type_ in self.__valid_types:
+            raise ValueError("type must be {}, got '{}'".format(
+                    ", ".join(['%s'%s for s in self.__valid_types]), type_))
         self._type = type_
         self._symbol = symbol
 
@@ -440,10 +434,9 @@ class Unit(object):
         """
 
         unit = _elem('unit')
-        if self._type:
-            unit.attrib['type'] =  self._type
-        if self._symbol:
-            unit.attrib['symbol'] = self._symbol
+
+        _addA(unit, self._type, 'type')
+        _addA(unit, self._symbol, 'symbol')
 
         unit.text = self._name
 
