@@ -36,7 +36,7 @@ class TestEEML(TestCase):
     def test_good_data(self):
         u = Unit('Celsius', 'derivedSI', 'C')
         test_data = Data(
-            id=0,
+            id_=0,
             value=10.0, 
             tags=['length'], 
             minValue=0, 
@@ -63,13 +63,13 @@ class TestEEML(TestCase):
             'myemail@roomsomewhere',
             updated='2007-05-04T18:13:51.0Z',
             creator='http://www.somewhere',
-            id=1)
+            id_=1)
 
         assert_true(xml_compare(etree.fromstring(
             """
             <environment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" creator="http://www.somewhere" id="1" updated="2007-05-04T18:13:51.0Z">
                 <title>A Room Somewhere</title>
-                <feed />
+                <feed>http://www.cosm.com/feeds/1.xml</feed>
                 <status>frozen</status>
                 <description>This is a room somewhere</description>
                 <icon>http://www.roomsomewhere/icon.png</icon>
@@ -87,7 +87,7 @@ class TestEEML(TestCase):
             'myemail@roomsomewhere',
             updated='2007-05-04T18:13:51.0Z',
             creator='http://www.somewhere',
-            id=1)
+            id_=1)
         loc = Location('My Room', 32.4, 22.7, 0.2, 'indoor', 'physical', 'fixed')
         u = Unit('Celsius', 'derivedSI', 'C')
         dat = []
@@ -107,7 +107,7 @@ class TestEEML(TestCase):
             <eeml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" xsi:schemaLocation="http://www.eeml.org/xsd/0.5.1 http://www.eeml.org/xsd/0.5.1/0.5.1.xsd" version="0.5.1">
                 <environment creator="http://www.somewhere" id="1" updated="2007-05-04T18:13:51.0Z">
                     <title>A Room Somewhere</title>
-                    <feed />
+                    <feed>http://www.cosm.com/feeds/1.xml</feed>                    
                     <status>frozen</status>
                     <description>This is a room somewhere</description>
                     <icon>http://www.roomsomewhere/icon.png</icon>
