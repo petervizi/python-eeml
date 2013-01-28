@@ -36,7 +36,7 @@ class TestEEML(TestCase):
     def test_good_data(self):
         u = Unit('Celsius', 'derivedSI', 'C')
         test_data = Data(
-            id_=0,
+            id=0,
             value=10.0, 
             tags=['length'], 
             minValue=0, 
@@ -53,6 +53,45 @@ class TestEEML(TestCase):
             """.strip()), test_data.toeeml(), reporter=self.fail))
 
 
+    def test_good_datapoints(self):
+        env = Environment('A Room Somewhere',
+                          'http://www.cosm.com/feeds/1.xml',
+                          'frozen',
+                          'This is a room somewhere',
+                          'http://www.roomsomewhere/icon.png',
+                          'http://www.roomsomewhere/',
+                          'myemail@roomsomewhere',
+                          updated='2007-05-04T18:13:51.0Z',
+                          creator='http://www.somewhere',
+                          id=1)
+
+        datapoints = DataPoints([(0,), (1,), (2, datetime(2007, 5, 4, 18, 13, 51))])
+
+        result = create_eeml(env, None, datapoints).toeeml()
+
+        assert_true(xml_compare(etree.fromstring(
+            """
+<eeml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" xsi:schemaLocation="http://www.eeml.org/xsd/0.5.1 http://www.eeml.org/xsd/0.5.1/0.5.1.xsd" version="0.5.1">
+  <environment updated="2007-05-04T18:13:51.0Z" creator="http://www.somewhere" id="1">
+    <title>A Room Somewhere</title>
+    <feed>http://www.cosm.com/feeds/1.xml</feed>
+    <status>frozen</status>
+    <description>This is a room somewhere</description>
+    <icon>http://www.roomsomewhere/icon.png</icon>
+    <website>http://www.roomsomewhere/</website>
+    <email>myemail@roomsomewhere</email>
+    <data>
+      <datapoints xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1">
+        <value>0</value>
+        <value>1</value>
+        <value at="2007-05-04T18:13:51">2</value>
+      </datapoints>
+    </data>
+  </environment>
+</eeml>
+""".strip()), result, reporter=self.fail))
+
+
     def test_good_environment(self):
         env = Environment('A Room Somewhere',
             'http://www.cosm.com/feeds/1.xml',
@@ -63,7 +102,7 @@ class TestEEML(TestCase):
             'myemail@roomsomewhere',
             updated='2007-05-04T18:13:51.0Z',
             creator='http://www.somewhere',
-            id_=1)
+            id=1)
 
         assert_true(xml_compare(etree.fromstring(
             """
@@ -87,7 +126,7 @@ class TestEEML(TestCase):
             'myemail@roomsomewhere',
             updated='2007-05-04T18:13:51.0Z',
             creator='http://www.somewhere',
-            id_=1)
+            id=1)
         loc = Location('My Room', 32.4, 22.7, 0.2, 'indoor', 'physical', 'fixed')
         u = Unit('Celsius', 'derivedSI', 'C')
         dat = []
@@ -101,6 +140,7 @@ class TestEEML(TestCase):
         intermed = etree.tostring(
             create_eeml(env, loc, dat).toeeml()) # Broken down to help with error-checking
         final = etree.fromstring(intermed)
+
 
         assert_true(xml_compare(etree.fromstring(
             """
