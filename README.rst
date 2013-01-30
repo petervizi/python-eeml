@@ -40,6 +40,8 @@ An example python script for publishing measurement data::
     pac.update([eeml.Data(0, readings[0], unit=eeml.Celsius()), eeml.Data(1, readings[1], unit=eeml.RH())])
     pac.put()
 
+Other examples can be found in the example folder.
+
 Requirements
 ============
 
