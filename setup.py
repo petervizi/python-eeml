@@ -3,13 +3,15 @@ from setuptools import find_packages
 
 import logging, multiprocessing
 
+VERSION="3.2.0"
+
 setup(
     name="python-eeml", 
-    version="3.1.0",
+    version=VERSION,
     author="Peter Vizi",
     author_email="peter.vizi@gmail.com",
     url="https://github.com/petervizi/python-eeml",
-    download_url="https://github.com/petervizi/python-eeml/zipball/3.1.0",
+    download_url="https://github.com/petervizi/python-eeml/zipball/{}".format(VERSION),
     description="Python support for the Extended Environments Markup Language",
     license="GPLv3",
     install_requires = [
