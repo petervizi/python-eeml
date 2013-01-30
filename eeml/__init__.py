@@ -64,8 +64,11 @@ class Environment(object):
         self._email = email
         self._updated = updated
         self._creator = creator
-        if id_ is not None and int(id_) < 0:
-            raise ValueError("id must be a positive integer")
+        if isinstance(id_, (int, long)):
+            if id_ < 0:
+                raise ValueError("id must be a positive integer, got {}".format(id_))
+        elif id_ is not None:
+            raise ValueError("id must be an integer, got {}".format(type(id_)))
         self._id = id_
         self._location = None
         self._data = []
@@ -109,13 +112,12 @@ class Environment(object):
         :rtype: `Element`
         """
         env = _elem('environment')
-        if self._updated:
-            if isinstance(self._updated, (date, datetime,)):
-                env.attrib['updated'] =  self._updated.isoformat()
-            else:
-                env.attrib['updated'] = self._updated
+        if isinstance(self._updated, (date, datetime,)):
+            _addA(env, self._updated, 'updated', lambda x: x.isoformat())
+        elif self._updated is not None:
+            _addA(env, self._updated, 'updated')
         _addA(env, self._creator, 'creator')
-        _addA(env, self._id, 'id')
+        _addA(env, self._id, 'id', str)
         _addE(env, self._title, 'title')
         _addE(env, self._feed, 'feed')
         _addE(env, self._status, 'status')
@@ -124,7 +126,7 @@ class Environment(object):
         _addE(env, self._website, 'website')
         _addE(env, self._email, 'email')
         _addE(env, self._private, 'private')
-        if self._location:            
+        if self._location is not None:
             env.append(self._location.toeeml())
         for data in self._data:
             env.append(data.toeeml())
@@ -185,7 +187,7 @@ class EEML(object):
         :type data: `Data`, `list`
         """
 
-        if not self._environment: 
+        if self._environment is None:
             raise Exception("Environment not set, cannot update data.")
         self._environment.updateData(data)
 
@@ -220,17 +222,17 @@ class Location(object):
         self._lon = lon
         self._ele = ele
 
-        if exposure and exposure not in ['indoor', 'outdoor']:
+        if exposure is not None and exposure not in ['indoor', 'outdoor']:
             raise ValueError("exposure must be 'indoor' or 'outdoor', got '{}'"
                              .format(exposure))
         self._exposure = exposure
 
-        if domain and domain not in ['physical', 'virtual']:
+        if domain is not None and domain not in ['physical', 'virtual']:
             raise ValueError("domain must be 'physical' or 'virtual', got '{}'"
                              .format(domain))
         self._domain = domain
 
-        if disposition and disposition not in ['fixed', 'mobile']:
+        if disposition is not None and disposition not in ['fixed', 'mobile']:
             raise ValueError("disposition must be 'fixed' or 'mobile', got '{}'"
                              .format(disposition))
         self._disposition = disposition
@@ -249,9 +251,9 @@ class Location(object):
         _addA(loc, self._domain, 'domain')
         _addA(loc, self._disposition, 'disposition')
         _addE(loc, self._name, 'name')
-        _addE(loc, self._lat, 'lat')
-        _addE(loc, self._lon, 'lon')
-        _addE(loc, self._ele, 'ele')
+        _addE(loc, self._lat, 'lat', str)
+        _addE(loc, self._lon, 'lon', str)
+        _addE(loc, self._ele, 'ele', str)
 
         return loc
 
@@ -307,23 +309,22 @@ class Data(object):
 
         data = _elem('data')
 
-        _addA(data, self._id, 'id')
+        _addA(data, self._id, 'id', str)
         for tag in self._tags:
             _addE(data, tag, 'tag')
 
-        if self._value:
+        if self._value is not None:
             tmp = _elem('current_value')
-            _addA(tmp, self._minValue, 'minValue')
-            _addA(tmp, self._maxValue, 'maxValue')
-            if self._at is not None:
-                tmp.attrib['at'] = self._at.isoformat()
+            _addA(tmp, self._minValue, 'minValue', str)
+            _addA(tmp, self._maxValue, 'maxValue', str)
+            _addA(tmp, self._at, 'at', lambda x: x.isoformat())
             tmp.text = str(self._value)
             data.append(tmp)
 
-        if self._unit:
+        if self._unit is not None:
             data.append(self._unit.toeeml())
 
-        if self._datapoints:
+        if self._datapoints is not None:
             data.append(self._datapoints.toeeml())
             
         return data
@@ -374,7 +375,7 @@ def create_eeml(env, loc, data):
     :type data: `list`, `Data`
     """
     eeml = EEML()
-    if loc:
+    if loc is not None:
         env.setLocation(loc)
     eeml.setEnvironment(env)
     env.updateData(data)

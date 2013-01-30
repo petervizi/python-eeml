@@ -1,4 +1,5 @@
 from datetime import datetime
+import pytz
 
 from xml.etree import ElementTree as etree
 
@@ -66,18 +67,18 @@ class TestEEML(TestCase):
                           'http://www.roomsomewhere/icon.png',
                           'http://www.roomsomewhere/',
                           'myemail@roomsomewhere',
-                          updated='2007-05-04T18:13:51.0Z',
+                          updated=datetime(2007, 5, 4, 18, 13, 51, 0, pytz.utc),
                           creator='http://www.somewhere',
                           id_=1)
 
-        datapoints = DataPoints([(0,), (1,), (2, datetime(2007, 5, 4, 18, 13, 51))])
+        datapoints = DataPoints([(0,), (1,), (2, datetime(2007, 5, 4, 18, 13, 51, 0, pytz.utc))])
 
         result = create_eeml(env, None, datapoints).toeeml()
 
         assert_true(xml_compare(etree.fromstring(
             """
 <eeml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" xsi:schemaLocation="http://www.eeml.org/xsd/0.5.1 http://www.eeml.org/xsd/0.5.1/0.5.1.xsd" version="0.5.1">
-  <environment updated="2007-05-04T18:13:51.0Z" creator="http://www.somewhere" id="1">
+  <environment updated="2007-05-04T18:13:51+00:00" creator="http://www.somewhere" id="1">
     <title>A Room Somewhere</title>
     <feed>http://www.cosm.com/feeds/1.xml</feed>
     <status>frozen</status>
@@ -89,7 +90,7 @@ class TestEEML(TestCase):
       <datapoints xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1">
         <value>0</value>
         <value>1</value>
-        <value at="2007-05-04T18:13:51">2</value>
+        <value at="2007-05-04T18:13:51+00:00">2</value>
       </datapoints>
     </data>
   </environment>
@@ -198,6 +199,14 @@ class TestEEML(TestCase):
         env.setLocation(Location())
         with self.assertRaises(ValueError):
             env.setLocation('foobar')
+
+    def test_env_id(self):
+        Environment(id_=1)
+        Environment(id_=None)
+        with self.assertRaises(ValueError):
+            Environment(id_='foobar')
+        with self.assertRaises(ValueError):
+            Environment(id_=4.22)
 
     def test_eeml_ctor(self):
         EEML(Environment())
