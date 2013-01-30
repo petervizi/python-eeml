@@ -1,10 +1,14 @@
+from datetime import datetime
+
 from xml.etree import ElementTree as etree
 
 from formencode.doctest_xml_compare import xml_compare
 
 from nose.tools import assert_true
 
-from eeml import *
+from eeml import Location, EEML, Environment, Data, DataPoints, create_eeml
+from eeml.datastream import Cosm, Pachube
+from eeml.unit import Celsius, Unit
 
 from unittest import TestCase
 

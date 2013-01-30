@@ -7,7 +7,7 @@ import httplib
 import re
 from lxml import etree
 
-url_pattern = re.compile("/v[12]/feeds/\d+\.xml")
+URLPATTERN = re.compile("/v[12]/feeds/\d+\.xml")
 
 class CosmError(Exception):
     """
@@ -33,7 +33,7 @@ class Cosm(object):
         if not env:
             env = eeml.Environment()
         if str(url) == url:
-            if(url_pattern.match(url)):
+            if(URLPATTERN.match(url)):
                 self._url = url
             else:
                 raise ValueError("The url argument has to be in the form "
