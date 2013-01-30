@@ -454,6 +454,17 @@ class Celsius(Unit):
         """
         Unit.__init__(self, 'Celsius', 'derivedSI', u'\xb0C')
 
+class Degree(Unit):
+    """
+    Degree of arc unit class.
+    """
+
+    def __init__(self):
+        """
+        Initialize the `Unit` parameters with Degree.
+        """
+        Unit.__init__(self, 'Degree', 'basicSI', u'\xb0')
+
 
 class Fahrenheit(Unit):
     """
@@ -465,6 +476,30 @@ class Fahrenheit(Unit):
         Initialize the `Unit` parameters with Fahrenheit.
         """
         Unit.__init__(self, 'Fahrenheit', 'derivedSI', u'\xb0F')
+
+
+class hPa(Unit):
+    """
+    hPa unit class.
+    """
+
+    def __init__(self):
+        """
+        Initialize the `Unit` parameters with hPa.
+        """
+        Unit.__init__(self, 'hPa', 'derivedSI', 'hPa')
+
+
+class Knots(Unit):
+    """
+    Knots class.
+    """
+
+    def __init__(self):
+        """
+        Initialize the `Unit` parameters with Knots.
+        """
+        Unit.__init__(self, 'Knots', 'conversionBasedUnits', u'kts')
 
 
 class RH(Unit):
