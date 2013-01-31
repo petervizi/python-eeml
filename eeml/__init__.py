@@ -98,7 +98,6 @@ class Environment(object):
             for oldData in self._data:
                 if oldData._id == data._id:
                     oldData._datapoints = data
-                    print('overwriting')
                     return
             self._data.append(Data(data._id, None, datapoints=data))
         elif isinstance(data, list):
