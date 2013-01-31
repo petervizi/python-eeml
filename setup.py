@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 import logging, multiprocessing
 
-VERSION="4.0.0"
+VERSION="4.0.1"
 
 setup(
     name="python-eeml", 
