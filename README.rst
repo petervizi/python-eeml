@@ -28,6 +28,8 @@ Example
 An example python script for publishing measurement data::
 
     import eeml
+    import eeml.datastream
+    import eeml.unit
     import serial
 
     # parameters
@@ -36,8 +38,8 @@ An example python script for publishing measurement data::
 
     serial = serial.Serial('/dev/ttyUSB0', 9600)
     readings = serial.readline().strip().split(' ') # the readings are separated by spaces
-    pac = eeml.Cosm(API_URL, API_KEY)
-    pac.update([eeml.Data(0, readings[0], unit=eeml.Celsius()), eeml.Data(1, readings[1], unit=eeml.RH())])
+    pac = eeml.datastream.Cosm(API_URL, API_KEY)
+    pac.update([eeml.Data(0, readings[0], unit=eeml.unit.Celsius()), eeml.Data(1, readings[1], unit=eeml.unit.RH())])
     pac.put()
 
 Other examples can be found in the example folder.
