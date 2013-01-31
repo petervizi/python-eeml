@@ -208,6 +208,22 @@ class TestEEML(TestCase):
         with self.assertRaises(ValueError):
             Environment(id_=4.22)
 
+    def test_env_private(self):
+        env = Environment(private=False)
+        assert_true(xml_compare(etree.fromstring("""
+<environment xmlns="http://www.eeml.org/xsd/0.5.1">
+  <private>false</private>
+</environment>"""), env.toeeml(), reporter=self.fail))
+
+        env = Environment(private=True)
+        assert_true(xml_compare(etree.fromstring("""
+<environment xmlns="http://www.eeml.org/xsd/0.5.1">
+  <private>true</private>
+</environment>"""), env.toeeml(), reporter=self.fail))
+
+        with self.assertRaises(ValueError):
+            Environment(private='foobar')
+
     def test_eeml_ctor(self):
         EEML(Environment())
         with self.assertRaises(ValueError):

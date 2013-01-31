@@ -68,7 +68,12 @@ class Environment(object):
         self._id = id_
         self._location = None
         self._data = []
-        self._private = private
+        self._private = None
+        if isinstance(private, bool):
+            self._private = private
+        elif private is not None:
+            raise ValueError("private is expected to be bool, got {}"
+                             .format(type(private)))
 
     def setLocation(self, location):
         """
@@ -125,7 +130,7 @@ class Environment(object):
         _addE(env, self._icon, 'icon')
         _addE(env, self._website, 'website')
         _addE(env, self._email, 'email')
-        _addE(env, self._private, 'private')
+        _addE(env, self._private, 'private', lambda x: str(x).lower())
         if self._location is not None:
             env.append(self._location.toeeml())
         for data in self._data:
