@@ -67,7 +67,7 @@ class Environment(object):
         _assertPosInt(id_, 'id', False)
         self._id = id_
         self._location = None
-        self._data = []
+        self._data = dict()
         self._private = None
         if isinstance(private, bool):
             self._private = private
@@ -98,16 +98,15 @@ class Environment(object):
         :type data: `Data`, list of `Data` or `DataPoints` object
         """
         if isinstance(data, Data):
-            self._data.append(data)
+            self._data[data._id] = data
         elif isinstance(data, DataPoints):
-            for oldData in self._data:
-                if oldData._id == data._id:
-                    oldData._datapoints = data
-                    return
-            self._data.append(Data(data._id, None, datapoints=data))
+            if data._id in self._data:
+                self._data[data._id]._datapoints = data
+            else:
+                self._data[data._id] = Data(data._id, None, datapoints=data)
         elif isinstance(data, list):
             for dat in data:
-                self._data.append(dat)
+                self.updateData(dat)
 
     def toeeml(self):
         """
@@ -133,7 +132,7 @@ class Environment(object):
         _addE(env, self._private, 'private', lambda x: str(x).lower())
         if self._location is not None:
             env.append(self._location.toeeml())
-        for data in self._data:
+        for (dataId, data) in self._data.iteritems():
             env.append(data.toeeml())
         return env
 

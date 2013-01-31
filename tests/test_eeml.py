@@ -9,7 +9,7 @@ from nose.tools import assert_true
 
 from eeml import Location, EEML, Environment, Data, DataPoints, create_eeml
 from eeml.datastream import Cosm, Pachube
-from eeml.unit import Celsius, Unit
+from eeml.unit import Celsius, Unit, RH
 
 from unittest import TestCase
 
@@ -308,3 +308,35 @@ class TestEEML(TestCase):
     </datapoints>
   </data>
 </environment>"""), env.toeeml(), reporter=self.fail))
+
+    def test_multiple_update(self):
+        pac = Cosm(1, 'ASDF')
+        pac.update([
+                Data(1, 10),
+                Data(2, 22, unit=RH()),
+                Data(3, 44),
+                Data(5, 65)])
+
+        pac.update([
+                Data(2, 476),
+                Data(5, -1)])
+
+        assert_true(xml_compare(etree.fromstring("""
+            <eeml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" xsi:schemaLocation="http://www.eeml.org/xsd/0.5.1 http://www.eeml.org/xsd/0.5.1/0.5.1.xsd" version="0.5.1">
+              <environment>
+                <data id="1">
+                  <current_value>10</current_value>
+                </data>
+                <data id="2">
+                  <current_value>476</current_value>
+                </data>
+                <data id="3">
+                  <current_value>44</current_value>
+                </data>
+                <data id="5">
+                  <current_value>-1</current_value>
+                </data>
+              </environment>
+            </eeml>"""),
+                                etree.fromstring(pac.geteeml()), reporter=self.fail))
+
