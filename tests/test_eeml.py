@@ -1,7 +1,7 @@
 from datetime import datetime
 import pytz
 
-from xml.etree import ElementTree as etree
+from lxml import etree
 
 from formencode.doctest_xml_compare import xml_compare
 
@@ -16,7 +16,7 @@ from unittest import TestCase
 class TestEEML(TestCase):
 
     def test_good_location(self):
-        loc = Location('My Room', 32.4, 22.7, 0.2, 'indoor', 'physical', 'fixed')
+        loc = Location('physical', 'My Room', 32.4, 22.7, 0.2, 'indoor', 'fixed')
 
         assert_true(xml_compare(etree.fromstring(
             """
@@ -26,7 +26,7 @@ class TestEEML(TestCase):
             <lon>22.7</lon>
             <ele>0.2</ele>
             </location>
-            """.strip()), loc.toeeml(), reporter=self.fail))
+            """), loc.toeeml(), reporter=self.fail))
 
 
     def test_good_unit(self):
@@ -35,7 +35,7 @@ class TestEEML(TestCase):
         assert_true(xml_compare(etree.fromstring(
             """
             <unit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1" type="basicSI" symbol="C">Celzius</unit>
-            """.strip()), unit.toeeml(), reporter=self.fail))
+            """), unit.toeeml(), reporter=self.fail))
 
 
     def test_good_data(self):
@@ -56,7 +56,7 @@ class TestEEML(TestCase):
             <current_value maxValue="100" minValue="0">10.0</current_value>
             <unit symbol="C" type="derivedSI">Celsius</unit>
             </data>
-            """.strip()), test_data.toeeml(), reporter=self.fail))
+            """), test_data.toeeml(), reporter=self.fail))
 
 
     def test_good_datapoints(self):
@@ -71,7 +71,7 @@ class TestEEML(TestCase):
                           creator='http://www.somewhere',
                           id_=1)
 
-        datapoints = DataPoints([(0,), (1,), (2, datetime(2007, 5, 4, 18, 13, 51, 0, pytz.utc))])
+        datapoints = DataPoints(1, [(0,), (1,), (2, datetime(2007, 5, 4, 18, 13, 51, 0, pytz.utc))])
 
         result = create_eeml(env, None, datapoints).toeeml()
 
@@ -86,7 +86,7 @@ class TestEEML(TestCase):
     <icon>http://www.roomsomewhere/icon.png</icon>
     <website>http://www.roomsomewhere/</website>
     <email>myemail@roomsomewhere</email>
-    <data>
+    <data id="1">
       <datapoints xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.eeml.org/xsd/0.5.1">
         <value>0</value>
         <value>1</value>
@@ -95,7 +95,7 @@ class TestEEML(TestCase):
     </data>
   </environment>
 </eeml>
-""".strip()), result, reporter=self.fail))
+"""), result, reporter=self.fail))
 
 
     def test_good_environment(self):
@@ -120,7 +120,7 @@ class TestEEML(TestCase):
                 <icon>http://www.roomsomewhere/icon.png</icon>
                 <website>http://www.roomsomewhere/</website>
                 <email>myemail@roomsomewhere</email>
-            </environment>""".strip()), env.toeeml(), reporter=self.fail))
+            </environment>"""), env.toeeml(), reporter=self.fail))
 
     def test_good_create_doc(self):
         env = Environment('A Room Somewhere',
@@ -133,7 +133,7 @@ class TestEEML(TestCase):
             updated='2007-05-04T18:13:51.0Z',
             creator='http://www.somewhere',
             id_=1)
-        loc = Location('My Room', 32.4, 22.7, 0.2, 'indoor', 'physical', 'fixed')
+        loc = Location('physical', 'My Room', 32.4, 22.7, 0.2, 'indoor', 'fixed')
         u = Unit('Celsius', 'derivedSI', 'C')
         dat = []
         dat.append(Data(0, 36.2, minValue=23.8, maxValue=48.0, unit = u, tags=['temperature']))
@@ -186,7 +186,7 @@ class TestEEML(TestCase):
                     </data>
                 </environment>
             </eeml>
-            """.strip()), final, reporter=self.fail))
+            """), final, reporter=self.fail))
 
     def test_status(self):
         Environment(status='frozen')
@@ -196,7 +196,7 @@ class TestEEML(TestCase):
 
     def test_env_location(self):
         env = Environment()
-        env.setLocation(Location())
+        env.setLocation(Location('virtual'))
         with self.assertRaises(ValueError):
             env.setLocation('foobar')
 
@@ -214,22 +214,26 @@ class TestEEML(TestCase):
             EEML('foobar')
 
     def test_exposure(self):
-        Location(exposure='indoor')
-        Location(exposure='outdoor')
+        Location('virtual', exposure='indoor')
+        Location('physical', exposure='outdoor')
         with self.assertRaises(ValueError):
-            Location(exposure='foobar')
+            Location('virtual', exposure='foobar')
 
     def test_domain(self):
         Location(domain='physical')
         Location(domain='virtual')
+        Location('physical')
+        Location('virtual')
         with self.assertRaises(ValueError):
             Location(domain='foobar')
+        with self.assertRaises(ValueError):
+            Location('foobar')
 
     def test_disposition(self):
-        Location(disposition='fixed')
-        Location(disposition='mobile')
+        Location('virtual', disposition='fixed')
+        Location('virtual', disposition='mobile')
         with self.assertRaises(ValueError):
-            Location(disposition='foobar')
+            Location('virtual', disposition='foobar')
 
     def test_unit(self):
         Data(1, 2, unit=None)
@@ -241,6 +245,13 @@ class TestEEML(TestCase):
         Data(1, 2, at=datetime.now())
         with self.assertRaises(ValueError):
             Data(1, 2, at='foobar')
+
+    def test_data_id(self):
+        Data(1, 2)
+        with self.assertRaises(ValueError):
+            Data('foobar', 4)
+        with self.assertRaises(ValueError):
+            Data(4.44, 4)
 
     def test_unit_types(self):
         for i in ['basicSI', 'derivedSI', 'conversionBasedUnits',
@@ -261,3 +272,23 @@ class TestEEML(TestCase):
         with self.assertRaises(ValueError):
             Cosm('api.cosm.com/v2/feeds/', 'ASDF')
         
+    def test_multiple_datapoints(self):
+        env = Environment()
+        env.updateData(DataPoints(1, [(4,)]))
+        env.updateData(DataPoints(4, [(5,)]))
+        env.updateData(DataPoints(1, [(6,), (7,)]))
+
+        assert_true(xml_compare(etree.fromstring("""
+<environment xmlns="http://www.eeml.org/xsd/0.5.1">
+  <data id="1">
+    <datapoints>
+      <value>6</value>
+      <value>7</value>
+    </datapoints>
+  </data>
+  <data id="4">
+    <datapoints>
+      <value>5</value>
+    </datapoints>
+  </data>
+</environment>"""), env.toeeml(), reporter=self.fail))

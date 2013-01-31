@@ -25,6 +25,7 @@ def _addE(env, attr, name, call=lambda x: x):
         tmp.text = call(attr)
         env.append(tmp)
 
+
 def _addA(env, attr, name, call=lambda x: x):
     """
     Helper method to add attribute if not None
@@ -32,3 +33,18 @@ def _addA(env, attr, name, call=lambda x: x):
     if attr is not None:
         env.attrib[name] = call(attr)
 
+
+def _assertPosInt(val, name, required=False):
+    """
+    Check if val is positive integer. If val is None ValueError is raised
+    if required is True
+    """
+    if isinstance(val, (int, long)):
+        if val < 0:
+            raise ValueError("Positive integer is required as {}, got {}"
+                             .format(name, val))
+    elif val is not None:
+        raise ValueError("Integer value is required as {}, got {}"
+                         .format(name, type(val)))
+    elif required:
+        raise ValueError("{} is required, got {}".format(name, val))

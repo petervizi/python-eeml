@@ -16,7 +16,7 @@ from datetime import date, datetime
 
 from eeml.namespace import EEML_SCHEMA_VERSION, SCHEMA_LOCATION
 from eeml.unit import Unit
-from eeml.util import _elem, _addE, _addA
+from eeml.util import _elem, _addE, _addA, _assertPosInt
 
 class Environment(object):
     """
@@ -64,11 +64,7 @@ class Environment(object):
         self._email = email
         self._updated = updated
         self._creator = creator
-        if isinstance(id_, (int, long)):
-            if id_ < 0:
-                raise ValueError("id must be a positive integer, got {}".format(id_))
-        elif id_ is not None:
-            raise ValueError("id must be an integer, got {}".format(type(id_)))
+        _assertPosInt(id_, 'id', False)
         self._id = id_
         self._location = None
         self._data = []
@@ -98,11 +94,16 @@ class Environment(object):
         """
         if isinstance(data, Data):
             self._data.append(data)
+        elif isinstance(data, DataPoints):
+            for oldData in self._data:
+                if oldData._id == data._id:
+                    oldData._datapoints = data
+                    print('overwriting')
+                    return
+            self._data.append(Data(data._id, None, datapoints=data))
         elif isinstance(data, list):
             for dat in data:
                 self._data.append(dat)
-        elif isinstance(data, DataPoints):
-            self._data.append(Data(None, None, datapoints=data))
 
     def toeeml(self):
         """
@@ -196,11 +197,13 @@ class Location(object):
     """
     A class representing the location tag of the document.
     """
-    def __init__(self, name=None, lat=None, lon=None, ele=None,
-                 exposure=None, domain=None, disposition=None):
+    def __init__(self, domain, name=None, lat=None, lon=None, ele=None,
+                 exposure=None, disposition=None):
         """
         :raise Exception: if sg is wrong
 
+        :param domain: domain (``physical`` or ``virtual``)
+        :type domain: `str`
         :param name: a descriptive name
         :type name: `str`
         :param lat: latitude
@@ -211,8 +214,6 @@ class Location(object):
         :type ele: `float`
         :param exposure: exposure (``indoor`` or ``outdoor``)
         :type exposure: `str`
-        :param domain: domain (``physical`` or ``virtual``)
-        :type domain: `str`
         :param disposition: disposition (``fixed`` or ``mobile``)
         :type disposition: `str`
         """
@@ -227,8 +228,8 @@ class Location(object):
                              .format(exposure))
         self._exposure = exposure
 
-        if domain is not None and domain not in ['physical', 'virtual']:
-            raise ValueError("domain must be 'physical' or 'virtual', got '{}'"
+        if domain not in ['physical', 'virtual']:
+            raise ValueError("domain is required, must be 'physical' or 'virtual', got '{}'"
                              .format(domain))
         self._domain = domain
 
@@ -283,6 +284,7 @@ class Data(object):
         :param datapoints: additional datapoints beyond current_value
         :type datapoints: `DataPoint`
         """
+        _assertPosInt(id_, 'id', True)
         self._id = id_
         self._value = value
         self._tags = tags
@@ -335,13 +337,19 @@ class DataPoints(object):
     The DataPoints element of the document
     """
 
-    def __init__(self, values=list()):
+    def __init__(self, id_, values=list()):
         """
-        Create a new DataPoints
+        Create a new DataPoints. We want to be able to simply add a DataPoints
+        object to the Environment via updateData, so we have to specify the id
+        of the Data object that will include this DataPoints.
 
+        :param id_: This is the id of the Data object that this DataPoints will belong to
+        :type id: positive `int`
         :param values: the value of the data points, pairs of (value, date), where date is optional
         :type values: `float`
         """
+        _assertPosInt(id_, 'id', True)
+        self._id = id_
         self._values = values
     
     def toeeml(self):
