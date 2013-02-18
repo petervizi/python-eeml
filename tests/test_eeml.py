@@ -12,6 +12,7 @@ from eeml.datastream import Cosm, Pachube
 from eeml.unit import Celsius, Unit, RH
 
 from unittest import TestCase
+from unittest import main as UnitTestMain
 
 class TestEEML(TestCase):
 
@@ -340,3 +341,10 @@ class TestEEML(TestCase):
             </eeml>"""),
                                 etree.fromstring(pac.geteeml()), reporter=self.fail))
 
+    def test_invalidator(self):
+        import eeml.validator
+        oldvalidator = eeml.validator
+        from eeml.invalidator import Invalidator
+        eeml.validator = Invalidator()
+        env = Environment(status='foobar')
+        eeml.validator = oldvalidator

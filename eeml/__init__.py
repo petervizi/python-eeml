@@ -17,12 +17,26 @@ from datetime import date, datetime
 from eeml.namespace import EEML_SCHEMA_VERSION, SCHEMA_LOCATION
 from eeml.unit import Unit
 from eeml.util import _elem, _addE, _addA, _assertPosInt
+from eeml.validator import Validator
+
+validator = Validator()
+
+def validate(validatorMethodName):
+    def fn(realf):
+        def wrapper(*args, **kwargs):
+            realf(*args, **kwargs)
+            vtor = getattr(validator, validatorMethodName)
+            vtor(args[0])
+
+        return wrapper
+    return fn
 
 class Environment(object):
     """
     The Environment element of the document.
     """
 
+    @validate('environment')
     def __init__(self, title=None, feed=None, status=None, description=None,
                  icon=None, website=None, email=None, updated=None,
                  creator=None, id_=None, private=None):
@@ -54,9 +68,6 @@ class Environment(object):
         """
         self._title = title
         self._feed = feed
-        if status and status not in ['frozen', 'live']:
-            raise ValueError("status must be either 'frozen' or 'live', "
-                             "got {}".format(status))
         self._status = status
         self._description = description
         self._icon = icon
@@ -64,16 +75,10 @@ class Environment(object):
         self._email = email
         self._updated = updated
         self._creator = creator
-        _assertPosInt(id_, 'id', False)
         self._id = id_
         self._location = None
         self._data = dict()
-        self._private = None
-        if isinstance(private, bool):
-            self._private = private
-        elif private is not None:
-            raise ValueError("private is expected to be bool, got {}"
-                             .format(type(private)))
+        self._private = private
 
     def setLocation(self, location):
         """
@@ -200,6 +205,7 @@ class Location(object):
     """
     A class representing the location tag of the document.
     """
+    @validate('location')
     def __init__(self, domain, name=None, lat=None, lon=None, ele=None,
                  exposure=None, disposition=None):
         """
@@ -225,20 +231,8 @@ class Location(object):
         self._lat = lat
         self._lon = lon
         self._ele = ele
-
-        if exposure is not None and exposure not in ['indoor', 'outdoor']:
-            raise ValueError("exposure must be 'indoor' or 'outdoor', got '{}'"
-                             .format(exposure))
         self._exposure = exposure
-
-        if domain not in ['physical', 'virtual']:
-            raise ValueError("domain is required, must be 'physical' or 'virtual', got '{}'"
-                             .format(domain))
         self._domain = domain
-
-        if disposition is not None and disposition not in ['fixed', 'mobile']:
-            raise ValueError("disposition must be 'fixed' or 'mobile', got '{}'"
-                             .format(disposition))
         self._disposition = disposition
 
     def toeeml(self):
@@ -266,7 +260,7 @@ class Data(object):
     """
     The Data element of the document
     """
-
+    @validate('data')
     def __init__(self, id_, value, tags=list(), minValue=None, maxValue=None,
                  unit=None, at=None, datapoints=None):
         """
@@ -287,20 +281,13 @@ class Data(object):
         :param datapoints: additional datapoints beyond current_value
         :type datapoints: `DataPoint`
         """
-        _assertPosInt(id_, 'id', True)
         self._id = id_
         self._value = value
         self._tags = tags
         
         self._minValue = minValue
         self._maxValue = maxValue
-        if unit is not None and not isinstance(unit, Unit):
-            raise ValueError("unit must be an instance of Unit, got {}"
-                             .format(type(unit)))
         self._unit = unit
-        if at is not None and not isinstance(at, datetime):
-            raise ValueError("at must be an instance of datetime.datetime, "
-                             "got {}".format(type(at)))
         self._at = at
         self._datapoints = datapoints
 
@@ -339,7 +326,7 @@ class DataPoints(object):
     """
     The DataPoints element of the document
     """
-
+    @validate('datapoints')
     def __init__(self, id_, values=list()):
         """
         Create a new DataPoints. We want to be able to simply add a DataPoints
@@ -351,7 +338,6 @@ class DataPoints(object):
         :param values: the value of the data points, pairs of (value, date), where date is optional
         :type values: `float`
         """
-        _assertPosInt(id_, 'id', True)
         self._id = id_
         self._values = values
     
