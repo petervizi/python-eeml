@@ -12,7 +12,6 @@ from eeml.datastream import Cosm, Pachube
 from eeml.unit import Celsius, Unit, RH
 
 from unittest import TestCase
-from unittest import main as UnitTestMain
 
 class TestEEML(TestCase):
 
