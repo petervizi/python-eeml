@@ -21,6 +21,7 @@ setup(
     tests_require = [
         'nose',
         'formencode',
+        'pytz'
     ],
     zip_safe = False,
     include_package_data = True,
