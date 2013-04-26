@@ -2,7 +2,7 @@ import eeml
 import eeml.datastream
 import eeml.unit
 import serial
-from eeml import CosmError
+from eeml.datastream import CosmError
 
 # parameters
 API_KEY = 'YOUR PERSONAL API KEY'
